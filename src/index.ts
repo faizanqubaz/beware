@@ -1,26 +1,32 @@
 import express from 'express'
 import {json} from 'body-parser'
-import {mainRouter} from './user'
+import {mainRouter} from './routes'
 import mongoose from 'mongoose'
 
-const app = express()
+import dotenv from 'dotenv';
+dotenv.config();
 
+const app = express()
+app.use(express.json());
 app.use(json())
+
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/todos';
+
 app.use('/v2',mainRouter)
 
 // CONNECT TO THE MONGODB
-async function connectToDB() {
+const start = async () => {
     try {
-      await mongoose.connect('mongodb://127.0.0.1:27017/todos',);
-      console.log('Connected to DB');
+        await mongoose.connect(MONGODB_URI);
+        console.log('Connected to DB');
+
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     } catch (err) {
-      console.error('Error connecting to DB', err);
+        console.error('Failed to connect to DB', err);
     }
-  }
-  
-  connectToDB();
+};
 
-
-app.listen(5000,()=>{
-console.log('server is listening on 3000')
-})
+start();

@@ -1,8 +1,14 @@
-import mongoose from 'mongoose'
+import mongoose,{Model,Document} from 'mongoose'
 
 interface ITodo{
     title:String,
     description:String
 }
 
-export {ITodo}
+interface ITodoDocument extends ITodo, Document {}
+
+interface ITodoModel extends Model<ITodoDocument> {
+    build(attr: ITodo): ITodoDocument;
+}
+
+export {ITodo,ITodoDocument,ITodoModel}
