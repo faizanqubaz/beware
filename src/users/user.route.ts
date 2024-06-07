@@ -1,7 +1,7 @@
-import express,{Express,Request,Response} from 'express'
-import {Register} from './user.controller'
+import express, { Express, Request, Response } from 'express';
+import { Register } from './user.controller';
 const router = express.Router();
 
-router.post('/register',Register)
+router.post('/register', Register);
 
-export {router as userRoute}
+export { router as userRoute };
