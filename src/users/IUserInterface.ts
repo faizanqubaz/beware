@@ -3,7 +3,7 @@ import mongoose, { Model, Document } from 'mongoose';
 interface IUser {
   name: String;
   username: String;
-  password:String;
+  password: String;
 }
 
 interface IUserDocument extends IUser, Document {}
