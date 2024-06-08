@@ -1,20 +1,23 @@
-import mongoose,{Schema,Document,Model} from 'mongoose'
-import { ITodo,ITodoDocument,ITodoModel } from './IUserInterface'
+import mongoose from 'mongoose';
+import { IUser, IUserDocument, IUserModel } from './IUserInterface';
 
-const todoSchema = new mongoose.Schema({
-    title:{
-        type:String,
-        required:true
-    },
-    description:{
-        type:String
-    }
-})
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  username:{
+    type:String
+  },
+  password: {
+    type: String,
+  },
+});
 
-todoSchema.statics.build = (attr: ITodo) => {
-    return new Todo(attr);
+userSchema.statics.build = (attr: IUser) => {
+  return new User(attr);
 };
 
-const Todo = mongoose.model<ITodoDocument, ITodoModel>('Todo', todoSchema);
+const User = mongoose.model<IUserDocument, IUserModel>('Users', userSchema);
 
-export { Todo };
+export { User };

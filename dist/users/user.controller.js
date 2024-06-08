@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Register = void 0;
 const user_model_1 = require("./user.model");
 const Register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { title, description } = req.body;
-    const todo = user_model_1.Todo.build({ title, description });
+    const { name, username, password } = req.body;
+    const user = user_model_1.User.build({ name, username, password });
     try {
-        yield todo.save();
-        res.status(201).send(todo);
+        yield user.save();
+        res.status(201).send(user);
     }
     catch (error) {
         res.status(500).send(error);
