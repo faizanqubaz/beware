@@ -1,7 +1,8 @@
 import express, { Express, Request, Response } from 'express';
-import { Register } from './user.controller';
+import { SendMail, saveTheUser } from './user.controller';
 const router = express.Router();
 
-router.post('/register', Register);
+router.post('/sendmail', SendMail);
+router.get('/confirmation-link', saveTheUser);
 
 export { router as userRoute };

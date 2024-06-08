@@ -15,7 +15,7 @@ const MONGODB_URI =
   process.env.MONGODB_URI ||
   'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
 
-app.use('/v2', mainRouter);
+app.use('/api/v2', mainRouter);
 
 // CONNECT TO THE MONGODB
 const start = async () => {
