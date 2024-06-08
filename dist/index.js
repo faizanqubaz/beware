@@ -22,12 +22,14 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, body_parser_1.json)());
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/todos';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
 app.use('/v2', routes_1.mainRouter);
 // CONNECT TO THE MONGODB
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield mongoose_1.default.connect(MONGODB_URI);
+        yield mongoose_1.default.connect(MONGODB_URI, {
+            ssl: true
+        });
         console.log('Connected to DB');
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

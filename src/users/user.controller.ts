@@ -1,13 +1,13 @@
 import express, { Response, Request } from 'express';
-import { Todo } from './user.model';
+import { User } from './user.model';
 
 const Register = async (req: Request, res: Response) => {
-  const { title, description } = req.body;
-  const todo = Todo.build({ title, description });
+  const { name, username,password } = req.body;
+  const user = User.build({ name, username,password });
 
   try {
-    await todo.save();
-    res.status(201).send(todo);
+    await user.save();
+    res.status(201).send(user);
   } catch (error) {
     res.status(500).send(error);
   }

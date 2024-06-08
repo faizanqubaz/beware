@@ -1,14 +1,15 @@
 import mongoose, { Model, Document } from 'mongoose';
 
-interface ITodo {
-  title: String;
-  description: String;
+interface IUser {
+  name: String;
+  username: String;
+  password:String;
 }
 
-interface ITodoDocument extends ITodo, Document {}
+interface IUserDocument extends IUser, Document {}
 
-interface ITodoModel extends Model<ITodoDocument> {
-  build(attr: ITodo): ITodoDocument;
+interface IUserModel extends Model<IUserDocument> {
+  build(attr: IUser): IUserDocument;
 }
 
-export { ITodo, ITodoDocument, ITodoModel };
+export { IUser, IUserDocument, IUserModel };
