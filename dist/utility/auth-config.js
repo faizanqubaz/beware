@@ -12,32 +12,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const body_parser_1 = require("body-parser");
-const routes_1 = require("./routes");
-const mongoose_1 = __importDefault(require("mongoose"));
+exports.getAccessToken = void 0;
+const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const app = (0, express_1.default)();
-app.use(express_1.default.json());
-app.use((0, body_parser_1.json)());
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI ||
-    'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
-app.use('/api/v2', routes_1.mainRouter);
-// CONNECT TO THE MONGODB
-const start = () => __awaiter(void 0, void 0, void 0, function* () {
+const getAccessToken = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield mongoose_1.default.connect(MONGODB_URI, {
-            ssl: true,
+        const response = yield axios_1.default.post(`https://dev-42td93pl.us.auth0.com/oauth/token`, {
+            client_id: 'NKMsawDXQWOgHxmWUVANEw4IucvPx9K2',
+            client_secret: '3AsOYtYa_iu08XyWSNyu3OwUjo4r9VkxEtw0EFR_kfVGPQSKgBjT8l2y_zyVVZ-_',
+            audience: 'https://dev-42td93pl.us.auth0.com/api/v2/',
+            grant_type: 'client_credentials',
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
-        console.log('Connected to DB');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        return response.data.access_token;
     }
-    catch (err) {
-        console.error('Failed to connect to DB', err);
+    catch (error) {
+        console.error('Error getting access token:', error);
+        throw error;
     }
 });
-start();
+exports.getAccessToken = getAccessToken;

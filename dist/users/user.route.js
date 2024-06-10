@@ -8,4 +8,6 @@ const express_1 = __importDefault(require("express"));
 const user_controller_1 = require("./user.controller");
 const router = express_1.default.Router();
 exports.userRoute = router;
-router.post('/register', user_controller_1.Register);
+router.post('/sendmail', user_controller_1.SendMail);
+router.get('/confirmation-link', user_controller_1.saveTheUser);
+router.get('/customers', user_controller_1.getAllCustomersBySender);

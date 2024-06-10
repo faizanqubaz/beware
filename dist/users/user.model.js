@@ -10,12 +10,21 @@ const userSchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
-    username: {
-        type: String
-    },
-    password: {
+    email: {
         type: String,
     },
+    username: {
+        type: String,
+    },
+    created_at: {
+        type: String,
+    },
+    picture: {
+        type: String,
+    },
+    inviteFrom: {
+        type: String
+    }
 });
 userSchema.statics.build = (attr) => {
     return new User(attr);

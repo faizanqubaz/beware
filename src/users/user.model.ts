@@ -6,10 +6,19 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  email: {
+    type: String,
+  },
   username: {
     type: String,
   },
-  password: {
+  created_at: {
+    type: String,
+  },
+  picture: {
+    type: String,
+  },
+  inviteFrom: {
     type: String,
   },
 });
