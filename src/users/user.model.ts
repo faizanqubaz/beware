@@ -18,6 +18,9 @@ const userSchema = new mongoose.Schema({
   picture: {
     type: String,
   },
+  inviteFrom: {
+    type: String,
+  },
 });
 
 userSchema.statics.build = (attr: IUser) => {

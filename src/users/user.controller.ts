@@ -12,25 +12,27 @@ const SendMail = async (
   req: Request<{}, {}, IEmailRequestBody>,
   res: Response,
 ) => {
-  const { email } = req.body;
+  const { email, sender } = req.body;
 
-  if (!email) {
+  if (!email || !sender || !sender.name || !sender.email) {
     return res.status(400).json({
       status: 400,
-      message: 'email should not be empty!',
+      message: 'email and sender information should not be empty!',
     });
   }
 
   const emailData: IEmailArc = {
     to: email,
+    sender: sender,
   };
 
   try {
-    await sendEmailToUser(emailData);
+    const inviteDetails = await sendEmailToUser(emailData);
 
     res.status(200).json({
       status: 200,
       message: 'Email sent successfully',
+      inviteDetails,
     });
   } catch (error) {
     return res.status(500).json({
@@ -58,10 +60,7 @@ const sendEmailToUser: (
       from: process.env.SENDER_EMAIL,
       to: emailData.to,
       subject: staticSubject,
-      html:
-        '<p>You requested for click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/user/confirmation-link?token=' +
-        emailData.to +
-        '">link</a> for verfication</p>',
+      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/user/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
     };
 
     const data: SMTPTransport.SentMessageInfo =
@@ -74,10 +73,19 @@ const sendEmailToUser: (
 };
 
 const saveTheUser = async (req: Request, res: Response) => {
-  const email = req.query.token;
+  const inviteTo = req.query.inviteTo as string | undefined;
+  const inviteFrom = req.query.inviteFrom as string | undefined;
+
+  if (!inviteTo || !inviteFrom) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid or missing invite parameters!',
+    });
+  }
 
   try {
     const accessToken = await getAccessToken();
+
     const response = await axios.get(
       `https://dev-42td93pl.us.auth0.com/api/v2/users-by-email`,
       {
@@ -85,12 +93,13 @@ const saveTheUser = async (req: Request, res: Response) => {
           Authorization: `Bearer ${accessToken}`,
         },
         params: {
-          email,
+          email: inviteTo,
         },
       },
     );
 
     const userExists = response.data;
+
     if (!Array.isArray(userExists) || userExists.length === 0) {
       return res.json({
         status: 200,
@@ -101,6 +110,7 @@ const saveTheUser = async (req: Request, res: Response) => {
     // SAVE THE USER TO THE DATABSE
     const firstUser = userExists[0];
     const existingUser = await User.findOne({ email: firstUser.email });
+
     if (existingUser) {
       return res.status(200).json({
         status: 200,
@@ -113,6 +123,7 @@ const saveTheUser = async (req: Request, res: Response) => {
       created_at: firstUser.created_at,
       username: firstUser.name,
       picture: firstUser.picture,
+      inviteFrom: inviteFrom,
     });
 
     await newUser.save();
@@ -127,4 +138,37 @@ const saveTheUser = async (req: Request, res: Response) => {
   }
 };
 
-export { SendMail, saveTheUser };
+const getAllCustomersBySender = async (req: Request, res: Response) => {
+  const { email: senderEmail } = req.query;
+
+  if (!senderEmail) {
+    return res.status(400).json({
+      status: 400,
+      message: 'senderEmail query parameter is required!',
+    });
+  }
+
+  try {
+    const customers = await User.find({ inviteFrom: senderEmail });
+
+    if (customers.length === 0) {
+      return res.status(200).json({
+        status: 200,
+        message: 'No customers found for this sender',
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      data: customers,
+    });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Error fetching customers',
+    });
+  }
+};
+
+export { SendMail, saveTheUser, getAllCustomersBySender };

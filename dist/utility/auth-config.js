@@ -18,12 +18,15 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const getAccessToken = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('sssss', process.env.AUTH0_CLIENT_ID);
-        const response = yield axios_1.default.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
-            client_id: process.env.AUTH0_CLIENT_ID,
-            client_secret: process.env.AUTH0_CLIENT_SECRET,
-            audience: process.env.AUTH0_AUDIENCE,
+        const response = yield axios_1.default.post(`https://dev-42td93pl.us.auth0.com/oauth/token`, {
+            client_id: 'NKMsawDXQWOgHxmWUVANEw4IucvPx9K2',
+            client_secret: '3AsOYtYa_iu08XyWSNyu3OwUjo4r9VkxEtw0EFR_kfVGPQSKgBjT8l2y_zyVVZ-_',
+            audience: 'https://dev-42td93pl.us.auth0.com/api/v2/',
             grant_type: 'client_credentials',
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
         return response.data.access_token;
     }
