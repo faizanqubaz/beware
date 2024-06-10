@@ -1,6 +1,6 @@
 import mongoose, { Model, Document } from 'mongoose';
 
-interface IUser {
+interface ICustomer {
   name: String;
   email: String;
   created_at: String;
@@ -9,10 +9,10 @@ interface IUser {
   inviteFrom: String;
 }
 
-interface IUserDocument extends IUser, Document {}
+interface ICustomerDocument extends ICustomer, Document {}
 
-interface IUserModel extends Model<IUserDocument> {
-  build(attr: IUser): IUserDocument;
+interface ICustomerModel extends Model<ICustomerDocument> {
+  build(attr: ICustomer): ICustomerDocument;
 }
 
 interface IEmailArc {
@@ -31,4 +31,10 @@ interface IEmailRequestBody {
   };
 }
 
-export { IUser, IUserDocument, IUserModel, IEmailArc, IEmailRequestBody };
+export {
+  ICustomer,
+  ICustomerDocument,
+  ICustomerModel,
+  IEmailArc,
+  IEmailRequestBody,
+};

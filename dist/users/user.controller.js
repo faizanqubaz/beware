@@ -82,7 +82,6 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     try {
         const accessToken = yield (0, auth_config_1.getAccessToken)();
-        console.log('accessToken', accessToken);
         const response = yield axios_1.default.get(`https://dev-42td93pl.us.auth0.com/api/v2/users-by-email`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -92,7 +91,6 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             },
         });
         const userExists = response.data;
-        console.log('userExists', userExists);
         if (!Array.isArray(userExists) || userExists.length === 0) {
             return res.json({
                 status: 200,
@@ -101,27 +99,26 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         // SAVE THE USER TO THE DATABSE
         const firstUser = userExists[0];
-        const existingUser = yield user_model_1.User.findOne({ email: firstUser.email });
-        console.log('usersss', firstUser);
-        if (existingUser) {
+        const existingCustomer = yield user_model_1.Customer.findOne({ email: firstUser.email });
+        if (existingCustomer) {
             return res.status(200).json({
                 status: 200,
-                message: 'User Already Exist in the DB',
+                message: 'Customer Already Exist in the DB',
             });
         }
-        const newUser = user_model_1.User.build({
+        const newCustomer = user_model_1.Customer.build({
             name: firstUser.name,
             email: firstUser.email,
             created_at: firstUser.created_at,
             username: firstUser.name,
             picture: firstUser.picture,
-            inviteFrom: inviteFrom
+            inviteFrom: inviteFrom,
         });
-        yield newUser.save();
-        console.log('User saved to database:', newUser);
+        yield newCustomer.save();
+        console.log('Customer saved to database:', newCustomer);
         res.json({
             status: 200,
-            message: 'User authenticated and saved to database',
+            message: 'Customer authenticated and saved to database',
         });
     }
     catch (error) {
@@ -131,7 +128,7 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.saveTheUser = saveTheUser;
 const getAllCustomersBySender = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { senderEmail } = req.query;
+    const { email: senderEmail } = req.query;
     if (!senderEmail) {
         return res.status(400).json({
             status: 400,
@@ -139,7 +136,7 @@ const getAllCustomersBySender = (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
     try {
-        const customers = yield user_model_1.User.find({ inviteFrom: senderEmail });
+        const customers = yield user_model_1.Customer.find({ inviteFrom: senderEmail });
         if (customers.length === 0) {
             return res.status(200).json({
                 status: 200,

@@ -3,11 +3,11 @@ import {
   SendMail,
   saveTheUser,
   getAllCustomersBySender,
-} from './user.controller';
+} from './customers.controller';
 const router = express.Router();
 
-router.post('/sendmail', SendMail);
+router.post('/sendinvite', SendMail);
 router.get('/confirmation-link', saveTheUser);
 router.get('/customers', getAllCustomersBySender);
 
-export { router as userRoute };
+export { router as customerRoute };
