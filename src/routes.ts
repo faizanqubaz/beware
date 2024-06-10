@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
-import { userRoute } from './users/user.route';
+import { customerRoute } from './customers/customer.route';
 const router: Router = express.Router();
 
-router.use('/user', userRoute);
+router.use('/customer', customerRoute);
 
 export { router as mainRouter };

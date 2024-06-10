@@ -1,6 +1,10 @@
 import express, { Response, Request } from 'express';
-import { User } from './user.model';
-import { IEmailArc, IUserDocument, IEmailRequestBody } from './IUserInterface';
+import { Customer } from './customer.model';
+import {
+  IEmailArc,
+  ICustomerDocument,
+  IEmailRequestBody,
+} from './ICustomerInterface';
 import nodemailer from 'nodemailer';
 import { getAccessToken } from '../utility/auth-config';
 import axios from 'axios';
@@ -60,7 +64,7 @@ const sendEmailToUser: (
       from: process.env.SENDER_EMAIL,
       to: emailData.to,
       subject: staticSubject,
-      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/user/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
+      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
     };
 
     const data: SMTPTransport.SentMessageInfo =
@@ -73,8 +77,10 @@ const sendEmailToUser: (
 };
 
 const saveTheUser = async (req: Request, res: Response) => {
-  const inviteTo = req.query.inviteTo as string | undefined;
-  const inviteFrom = req.query.inviteFrom as string | undefined;
+  const inviteTo: string | undefined = req.query.inviteTo as string | undefined;
+  const inviteFrom: string | undefined = req.query.inviteFrom as
+    | string
+    | undefined;
 
   if (!inviteTo || !inviteFrom) {
     return res.status(400).json({
@@ -109,15 +115,15 @@ const saveTheUser = async (req: Request, res: Response) => {
 
     // SAVE THE USER TO THE DATABSE
     const firstUser = userExists[0];
-    const existingUser = await User.findOne({ email: firstUser.email });
+    const existingCustomer = await Customer.findOne({ email: firstUser.email });
 
-    if (existingUser) {
+    if (existingCustomer) {
       return res.status(200).json({
         status: 200,
-        message: 'User Already Exist in the DB',
+        message: 'Customer Already Exist in the DB',
       });
     }
-    const newUser: IUserDocument = User.build({
+    const newCustomer: ICustomerDocument = Customer.build({
       name: firstUser.name,
       email: firstUser.email,
       created_at: firstUser.created_at,
@@ -126,11 +132,11 @@ const saveTheUser = async (req: Request, res: Response) => {
       inviteFrom: inviteFrom,
     });
 
-    await newUser.save();
-    console.log('User saved to database:', newUser);
+    await newCustomer.save();
+    console.log('Customer saved to database:', newCustomer);
     res.json({
       status: 200,
-      message: 'User authenticated and saved to database',
+      message: 'Customer authenticated and saved to database',
     });
   } catch (error) {
     console.error('Error checking if user exists:', error);
@@ -149,7 +155,7 @@ const getAllCustomersBySender = async (req: Request, res: Response) => {
   }
 
   try {
-    const customers = await User.find({ inviteFrom: senderEmail });
+    const customers = await Customer.find({ inviteFrom: senderEmail });
 
     if (customers.length === 0) {
       return res.status(200).json({
