@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllCustomersBySender = exports.saveTheUser = exports.SendMail = void 0;
-const user_model_1 = require("./user.model");
+const customer_model_1 = require("./customer.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const auth_config_1 = require("../utility/auth-config");
 const axios_1 = __importDefault(require("axios"));
@@ -61,7 +61,7 @@ const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, functio
             from: process.env.SENDER_EMAIL,
             to: emailData.to,
             subject: staticSubject,
-            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/user/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
+            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
         };
         const data = yield transporter.sendMail(mailData);
         return data;
@@ -99,14 +99,14 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         // SAVE THE USER TO THE DATABSE
         const firstUser = userExists[0];
-        const existingCustomer = yield user_model_1.Customer.findOne({ email: firstUser.email });
+        const existingCustomer = yield customer_model_1.Customer.findOne({ email: firstUser.email });
         if (existingCustomer) {
             return res.status(200).json({
                 status: 200,
                 message: 'Customer Already Exist in the DB',
             });
         }
-        const newCustomer = user_model_1.Customer.build({
+        const newCustomer = customer_model_1.Customer.build({
             name: firstUser.name,
             email: firstUser.email,
             created_at: firstUser.created_at,
@@ -136,7 +136,7 @@ const getAllCustomersBySender = (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
     try {
-        const customers = yield user_model_1.Customer.find({ inviteFrom: senderEmail });
+        const customers = yield customer_model_1.Customer.find({ inviteFrom: senderEmail });
         if (customers.length === 0) {
             return res.status(200).json({
                 status: 200,
