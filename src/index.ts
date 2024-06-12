@@ -2,6 +2,7 @@ import express from 'express';
 import { json } from 'body-parser';
 import { mainRouter } from './routes';
 import mongoose from 'mongoose';
+import cors from 'cors';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -9,6 +10,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI =
