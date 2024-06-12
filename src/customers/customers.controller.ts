@@ -1,5 +1,6 @@
 import express, { Response, Request } from 'express';
 import { Customer } from './customer.model';
+import { User } from '../users/user.model';
 import {
   IEmailArc,
   ICustomerDocument,
@@ -64,7 +65,7 @@ const sendEmailToUser: (
       from: process.env.SENDER_EMAIL,
       to: emailData.to,
       subject: staticSubject,
-      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
+      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:5000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
     };
 
     const data: SMTPTransport.SentMessageInfo =
@@ -90,32 +91,18 @@ const saveTheUser = async (req: Request, res: Response) => {
   }
 
   try {
-    const accessToken = await getAccessToken();
+    const userExists = await User.findOne({ email: inviteTo });
 
-    const response = await axios.get(
-      `https://dev-42td93pl.us.auth0.com/api/v2/users-by-email`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        params: {
-          email: inviteTo,
-        },
-      },
-    );
-
-    const userExists = response.data;
-
-    if (!Array.isArray(userExists) || userExists.length === 0) {
-      return res.json({
-        status: 200,
-        message: 'user doesnot exists in Auth0 please signup!!',
-      });
+    if (!userExists) {
+      return res.redirect(
+        `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?client_id=ul5Xpas886pMbILv2cezCE2e8aCyRLpn&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`,
+      );
     }
 
     // SAVE THE USER TO THE DATABSE
-    const firstUser = userExists[0];
-    const existingCustomer = await Customer.findOne({ email: firstUser.email });
+    const existingCustomer = await Customer.findOne({
+      email: userExists.email,
+    });
 
     if (existingCustomer) {
       return res.status(200).json({
@@ -124,20 +111,17 @@ const saveTheUser = async (req: Request, res: Response) => {
       });
     }
     const newCustomer: ICustomerDocument = Customer.build({
-      name: firstUser.name,
-      email: firstUser.email,
-      created_at: firstUser.created_at,
-      username: firstUser.name,
-      picture: firstUser.picture,
+      name: userExists.name,
+      email: userExists.email,
+      created_at: '2012',
+      username: userExists.name,
+      picture: 'http',
       inviteFrom: inviteFrom,
     });
 
     await newCustomer.save();
     console.log('Customer saved to database:', newCustomer);
-    res.json({
-      status: 200,
-      message: 'Customer authenticated and saved to database',
-    });
+    return res.redirect(`http://localhost:3000`);
   } catch (error) {
     console.error('Error checking if user exists:', error);
     throw error;
