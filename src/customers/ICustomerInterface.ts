@@ -24,7 +24,7 @@ interface IEmailArc {
 }
 
 interface IEmailRequestBody {
-  email: string;
+  useremail: string;
   sender: {
     name: string;
     email: string;

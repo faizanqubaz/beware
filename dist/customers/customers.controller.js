@@ -60,7 +60,7 @@ const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, functio
             from: process.env.SENDER_EMAIL,
             to: emailData.to,
             subject: staticSubject,
-            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:3000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
+            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:5000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
         };
         const data = yield transporter.sendMail(mailData);
         return data;
@@ -81,13 +81,13 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     try {
         const userExists = yield user_model_1.User.findOne({ email: inviteTo });
-        console.log('userExists', userExists);
         if (!userExists) {
-            return res.redirect(`https://dev-s6de1fwzt8fohna5.us.auth0.com/authorize?client_id=djPUua6xNFzbs4c3JFaLQs7aORXFkB9h&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`);
+            return res.redirect(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?client_id=ul5Xpas886pMbILv2cezCE2e8aCyRLpn&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`);
         }
         // SAVE THE USER TO THE DATABSE
-        const firstUser = userExists;
-        const existingCustomer = yield customer_model_1.Customer.findOne({ email: firstUser.email });
+        const existingCustomer = yield customer_model_1.Customer.findOne({
+            email: userExists.email,
+        });
         if (existingCustomer) {
             return res.status(200).json({
                 status: 200,
@@ -95,10 +95,10 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             });
         }
         const newCustomer = customer_model_1.Customer.build({
-            name: firstUser.name,
-            email: firstUser.email,
+            name: userExists.name,
+            email: userExists.email,
             created_at: '2012',
-            username: firstUser.name,
+            username: userExists.name,
             picture: 'http',
             inviteFrom: inviteFrom,
         });
