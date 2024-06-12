@@ -29,13 +29,13 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             name: name,
             email: email,
             username: username,
-            role: "user",
+            role: 'user',
         });
         const userData = yield newuser.save();
         res.status(201).json({
             status: 200,
             message: 'user saved to the database',
-            data: userData
+            data: userData,
         });
     }
     catch (error) {

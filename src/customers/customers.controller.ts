@@ -7,19 +7,17 @@ import {
   IEmailRequestBody,
 } from './ICustomerInterface';
 import nodemailer from 'nodemailer';
-import { getAccessToken } from '../utility/auth-config';
-import axios from 'axios';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const SendMail = async (
+const SendInvite = async (
   req: Request<{}, {}, IEmailRequestBody>,
   res: Response,
 ) => {
-  const { email, sender } = req.body;
+  const { useremail, sender } = req.body;
 
-  if (!email || !sender || !sender.name || !sender.email) {
+  if (!useremail || !sender || !sender.name || !sender.email) {
     return res.status(400).json({
       status: 400,
       message: 'email and sender information should not be empty!',
@@ -27,7 +25,7 @@ const SendMail = async (
   }
 
   const emailData: IEmailArc = {
-    to: email,
+    to: useremail,
     sender: sender,
   };
 
@@ -99,21 +97,20 @@ const saveTheUser = async (req: Request, res: Response) => {
       );
     }
 
-    // SAVE THE USER TO THE DATABSE
+    //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
     const existingCustomer = await Customer.findOne({
       email: userExists.email,
     });
 
     if (existingCustomer) {
-      return res.status(200).json({
-        status: 200,
-        message: 'Customer Already Exist in the DB',
-      });
+      return res.redirect(
+        `http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`,
+      );
     }
     const newCustomer: ICustomerDocument = Customer.build({
       name: userExists.name,
       email: userExists.email,
-      created_at: '2012',
+      created_at: new Date().toDateString(),
       username: userExists.name,
       picture: 'http',
       inviteFrom: inviteFrom,
@@ -121,7 +118,9 @@ const saveTheUser = async (req: Request, res: Response) => {
 
     await newCustomer.save();
     console.log('Customer saved to database:', newCustomer);
-    return res.redirect(`http://localhost:3000`);
+    return res.redirect(
+      `http://localhost:3000?email=${newCustomer.email}&name=${newCustomer.name}`,
+    );
   } catch (error) {
     console.error('Error checking if user exists:', error);
     throw error;
@@ -161,4 +160,4 @@ const getAllCustomersBySender = async (req: Request, res: Response) => {
   }
 };
 
-export { SendMail, saveTheUser, getAllCustomersBySender };
+export { SendInvite, saveTheUser, getAllCustomersBySender };
