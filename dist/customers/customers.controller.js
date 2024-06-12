@@ -14,9 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllCustomersBySender = exports.saveTheUser = exports.SendMail = void 0;
 const customer_model_1 = require("./customer.model");
+const user_model_1 = require("../users/user.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const auth_config_1 = require("../utility/auth-config");
-const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const SendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -81,24 +80,13 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     try {
-        const accessToken = yield (0, auth_config_1.getAccessToken)();
-        const response = yield axios_1.default.get(`https://dev-42td93pl.us.auth0.com/api/v2/users-by-email`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            params: {
-                email: inviteTo,
-            },
-        });
-        const userExists = response.data;
-        if (!Array.isArray(userExists) || userExists.length === 0) {
-            return res.json({
-                status: 200,
-                message: 'user doesnot exists in Auth0 please signup!!',
-            });
+        const userExists = yield user_model_1.User.findOne({ email: inviteTo });
+        console.log('userExists', userExists);
+        if (!userExists) {
+            return res.redirect(`https://dev-s6de1fwzt8fohna5.us.auth0.com/authorize?client_id=djPUua6xNFzbs4c3JFaLQs7aORXFkB9h&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`);
         }
         // SAVE THE USER TO THE DATABSE
-        const firstUser = userExists[0];
+        const firstUser = userExists;
         const existingCustomer = yield customer_model_1.Customer.findOne({ email: firstUser.email });
         if (existingCustomer) {
             return res.status(200).json({
@@ -109,17 +97,14 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const newCustomer = customer_model_1.Customer.build({
             name: firstUser.name,
             email: firstUser.email,
-            created_at: firstUser.created_at,
+            created_at: '2012',
             username: firstUser.name,
-            picture: firstUser.picture,
+            picture: 'http',
             inviteFrom: inviteFrom,
         });
         yield newCustomer.save();
         console.log('Customer saved to database:', newCustomer);
-        res.json({
-            status: 200,
-            message: 'Customer authenticated and saved to database',
-        });
+        return res.redirect(`http://localhost:3000`);
     }
     catch (error) {
         console.error('Error checking if user exists:', error);

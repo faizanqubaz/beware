@@ -1,13 +1,10 @@
 import express, { Response, Request } from 'express';
-import {IUserDocument} from './Iuser.interface'
+import { IUserDocument } from './Iuser.interface';
 import { User } from './user.model';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const register = async (
-  req: Request,
-  res: Response,
-) => {
+const register = async (req: Request, res: Response) => {
   const { email, name, username } = req.body;
 
   if (!email || !name || !username) {
@@ -17,23 +14,20 @@ const register = async (
     });
   }
 
-
-
   try {
     const newuser: IUserDocument = User.build({
-        name: name,
-        email: email,
-        username: username,
-        role: "user",
-      });
-  
-     const userData= await newuser.save();
-    
+      name: name,
+      email: email,
+      username: username,
+      role: 'user',
+    });
+
+    const userData = await newuser.save();
 
     res.status(201).json({
       status: 200,
       message: 'user saved to the database',
-      data:userData
+      data: userData,
     });
   } catch (error) {
     return res.status(500).json({
@@ -42,7 +36,5 @@ const register = async (
     });
   }
 };
-
-
 
 export { register };
