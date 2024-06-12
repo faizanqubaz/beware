@@ -82,11 +82,13 @@ const sendEmailToUser: (
 };
 
 const saveTheUser = async (req: Request, res: Response) => {
+  // get the senderemail and enduser email
   const inviteTo: string | undefined = req.query.inviteTo as string | undefined;
   const inviteFrom: string | undefined = req.query.inviteFrom as
     | string
     | undefined;
 
+  // check if empty
   if (!inviteTo || !inviteFrom) {
     return res.status(400).json({
       status: 400,
@@ -95,9 +97,16 @@ const saveTheUser = async (req: Request, res: Response) => {
   }
 
   try {
-    const userExists = await User.findOne({ email: inviteTo });
+    // get the management api
+    const managementToken = await getManagementToken();
 
-    if (!userExists) {
+    const UserExists = await getUserFromManagementToken(
+      managementToken,
+      inviteTo,
+    );
+
+    // if user not exists
+    if (UserExists.length == 0) {
       const state = JSON.stringify({ inviteTo, inviteFrom });
       const authUrl =
         `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?` +
@@ -114,9 +123,9 @@ const saveTheUser = async (req: Request, res: Response) => {
       return res.redirect(authUrl);
     }
 
-    //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
+    //IF USER EXIST
     const existingCustomer = await Customer.findOne({
-      email: userExists.email,
+      email: UserExists[0].email,
     });
 
     if (existingCustomer) {
@@ -125,10 +134,10 @@ const saveTheUser = async (req: Request, res: Response) => {
       );
     }
     const newCustomer: ICustomerDocument = Customer.build({
-      name: userExists.name,
-      email: userExists.email,
+      name: UserExists[0].name,
+      email: UserExists[0].email,
       created_at: new Date().toDateString(),
-      username: userExists.name,
+      username: UserExists[0].name,
       picture: 'http',
       inviteFrom: inviteFrom,
     });
@@ -177,6 +186,7 @@ const getAllCustomersBySender = async (req: Request, res: Response) => {
   }
 };
 
+// IF THE USER NOT EXIT IN AUTH0 THEN IT WILL CALLED
 const getAuthorizationCode = async (req: Request, res: Response) => {
   const code = req.query.code as string | undefined;
   const state = req.query.state as string | undefined;
