@@ -12,27 +12,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAccessToken = void 0;
-const axios_1 = __importDefault(require("axios"));
+exports.register = void 0;
+const user_model_1 = require("./user.model");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const getAccessToken = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield axios_1.default.post(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/oauth/token`, {
-            client_id: 'DCOJxP7M7IkKpiD6uGMBtFhSnfi7txLH',
-            client_secret: 'WKxzlh_WVGSbQ858mKySX1ORC3xLmXvR92EV7XqCR2eO3uWaR_0CrKjAGhvLjWLh',
-            audience: 'https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/',
-            grant_type: 'client_credentials',
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
+const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, name, username } = req.body;
+    if (!email || !name || !username) {
+        return res.status(400).json({
+            status: 400,
+            message: 'email and name information should not be empty!',
         });
-        return response.data.access_token;
+    }
+    try {
+        const newuser = user_model_1.User.build({
+            name: name,
+            email: email,
+            username: username,
+            role: "user",
+        });
+        const userData = yield newuser.save();
+        res.status(201).json({
+            status: 200,
+            message: 'user saved to the database',
+            data: userData
+        });
     }
     catch (error) {
-        console.error('Error getting access token:', error);
-        throw error;
+        return res.status(500).json({
+            status: 500,
+            message: `Error sending email: ${error}`,
+        });
     }
 });
-exports.getAccessToken = getAccessToken;
+exports.register = register;
