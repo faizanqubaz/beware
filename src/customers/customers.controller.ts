@@ -92,9 +92,10 @@ const saveTheUser = async (req: Request, res: Response) => {
     const userExists = await User.findOne({ email: inviteTo });
 
     if (!userExists) {
-      return res.redirect(
-        `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?client_id=ul5Xpas886pMbILv2cezCE2e8aCyRLpn&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`,
-      );
+      return res.json({
+        status:200,
+        message:"user des not exists"
+      })
     }
 
     //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
