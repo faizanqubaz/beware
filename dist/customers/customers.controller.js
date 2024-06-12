@@ -12,22 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllCustomersBySender = exports.saveTheUser = exports.SendMail = void 0;
+exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
 const user_model_1 = require("../users/user.model");
+const axios_1 = __importDefault(require("axios"));
+const qs_1 = __importDefault(require("qs"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const SendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, sender } = req.body;
-    if (!email || !sender || !sender.name || !sender.email) {
+const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { useremail, sender } = req.body;
+    if (!useremail || !sender || !sender.name || !sender.email) {
         return res.status(400).json({
             status: 400,
             message: 'email and sender information should not be empty!',
         });
     }
     const emailData = {
-        to: email,
+        to: useremail,
         sender: sender,
     };
     try {
@@ -45,7 +47,7 @@ const SendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
-exports.SendMail = SendMail;
+exports.SendInvite = SendInvite;
 const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, function* () {
     const staticSubject = 'Confirmation Link';
     try {
@@ -82,29 +84,35 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const userExists = yield user_model_1.User.findOne({ email: inviteTo });
         if (!userExists) {
-            return res.redirect(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?client_id=ul5Xpas886pMbILv2cezCE2e8aCyRLpn&response_type=code&scope=openid%20profile%20email&state=SCOPE&redirect_uri=http://localhost:3000/auth/auth0/callback&screen_hint=signup&login_hint=${inviteTo}`);
+            const authUrl = `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?` +
+                qs_1.default.stringify({
+                    client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
+                    response_type: 'code',
+                    redirect_uri: '',
+                    scope: 'openid profile email read:users',
+                    audience: `https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/`
+                });
+            console.log('authurl', authUrl);
+            return res.redirect(authUrl);
         }
-        // SAVE THE USER TO THE DATABSE
+        //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
         const existingCustomer = yield customer_model_1.Customer.findOne({
             email: userExists.email,
         });
         if (existingCustomer) {
-            return res.status(200).json({
-                status: 200,
-                message: 'Customer Already Exist in the DB',
-            });
+            return res.redirect(`http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`);
         }
         const newCustomer = customer_model_1.Customer.build({
             name: userExists.name,
             email: userExists.email,
-            created_at: '2012',
+            created_at: new Date().toDateString(),
             username: userExists.name,
             picture: 'http',
             inviteFrom: inviteFrom,
         });
         yield newCustomer.save();
         console.log('Customer saved to database:', newCustomer);
-        return res.redirect(`http://localhost:3000`);
+        return res.redirect(`http://localhost:3000?email=${newCustomer.email}&name=${newCustomer.name}`);
     }
     catch (error) {
         console.error('Error checking if user exists:', error);
@@ -142,3 +150,24 @@ const getAllCustomersBySender = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.getAllCustomersBySender = getAllCustomersBySender;
+const getAuthorizationCode = (req, res) => {
+    const code = req.query.code;
+    const token = getTokenFromCode(code);
+};
+exports.getAuthorizationCode = getAuthorizationCode;
+const getTokenFromCode = (code) => __awaiter(void 0, void 0, void 0, function* () {
+    const tokenResponse = yield axios_1.default.post(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/oauth/token`, {
+        grant_type: 'authorization_code',
+        client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
+        client_secret: 'evpFmimHkoQrqwl4k7pIZ1cMIn1wTR6b12s-eod1cqYe0WcNHptbcBrzskm_dz9v',
+        code: code,
+        redirect_uri: 'http://localhost:5000/api/v2/customer/callback',
+        scope: 'read:users'
+    }, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+    const accessToken = tokenResponse.data.access_token;
+    console.log('accessToken', accessToken);
+    // Store the access token securely (e.g., in a session)
+    return accessToken;
+});

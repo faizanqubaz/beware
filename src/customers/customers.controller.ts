@@ -2,6 +2,12 @@ import express, { Response, Request } from 'express';
 import { Customer } from './customer.model';
 import { User } from '../users/user.model';
 import {
+  getManagementToken,
+  getUserFromManagementToken,
+} from '../utility/auth.utility';
+import axios from 'axios';
+import qs from 'qs';
+import {
   IEmailArc,
   ICustomerDocument,
   IEmailRequestBody,
@@ -92,10 +98,20 @@ const saveTheUser = async (req: Request, res: Response) => {
     const userExists = await User.findOne({ email: inviteTo });
 
     if (!userExists) {
-      return res.json({
-        status:200,
-        message:"user des not exists"
-      })
+      const state = JSON.stringify({ inviteTo, inviteFrom });
+      const authUrl =
+        `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?` +
+        qs.stringify({
+          client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
+          response_type: 'code',
+          redirect_uri: '',
+          scope: 'openid profile email read:users',
+          audience: `https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/`,
+          state,
+        });
+      console.log('authurl', authUrl);
+
+      return res.redirect(authUrl);
     }
 
     //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
@@ -161,4 +177,46 @@ const getAllCustomersBySender = async (req: Request, res: Response) => {
   }
 };
 
-export { SendInvite, saveTheUser, getAllCustomersBySender };
+const getAuthorizationCode = async (req: Request, res: Response) => {
+  const code = req.query.code as string | undefined;
+  const state = req.query.state as string | undefined;
+
+  if (!code || !state) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Authorization code or state is missing!',
+    });
+  }
+
+  const { inviteTo, inviteFrom } = JSON.parse(state);
+  const managementToken = await getManagementToken();
+
+  const UserFromManagementToken = await getUserFromManagementToken(
+    managementToken,
+    inviteTo,
+  );
+
+  // SAVE THAT INTO THE CUSTOMER TABLE ALSO
+
+  const newCustomerAdded: ICustomerDocument = Customer.build({
+    name: UserFromManagementToken[0].given_name,
+    email: UserFromManagementToken[0].email,
+    created_at: new Date().toDateString(),
+    username: UserFromManagementToken[0].name,
+    picture: 'http',
+    inviteFrom: inviteFrom,
+  });
+
+  await newCustomerAdded.save();
+
+  return res.redirect(
+    `http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`,
+  );
+};
+
+export {
+  SendInvite,
+  saveTheUser,
+  getAllCustomersBySender,
+  getAuthorizationCode,
+};
