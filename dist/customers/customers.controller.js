@@ -14,8 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
-const user_model_1 = require("../users/user.model");
-const axios_1 = __importDefault(require("axios"));
+const auth_utility_1 = require("../utility/auth.utility");
 const qs_1 = __importDefault(require("qs"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -73,8 +72,10 @@ const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // get the senderemail and enduser email
     const inviteTo = req.query.inviteTo;
     const inviteFrom = req.query.inviteFrom;
+    // check if empty
     if (!inviteTo || !inviteFrom) {
         return res.status(400).json({
             status: 400,
@@ -82,32 +83,38 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     try {
-        const userExists = yield user_model_1.User.findOne({ email: inviteTo });
-        if (!userExists) {
-            const authUrl = `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?` +
+        // get the management api
+        const managementToken = yield (0, auth_utility_1.getManagementToken)();
+        const UserExists = yield (0, auth_utility_1.getUserFromManagementToken)(managementToken, inviteTo);
+        // if user not exists
+        if (UserExists.length == 0) {
+            const state = JSON.stringify({ inviteTo, inviteFrom });
+            const authUrl = `https://${process.env.AUTH0_SPA_DOMAIN}/authorize?` +
                 qs_1.default.stringify({
-                    client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
+                    client_id: process.env.AUTH0_SPA_DOMAIN,
                     response_type: 'code',
-                    redirect_uri: '',
+                    redirect_uri: process.env.AUTH0_SPA_REDIRECT_URI,
                     scope: 'openid profile email read:users',
-                    audience: `https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/`
+                    audience: `https://${process.env.AUTH0_SPA_DOMAIN}/api/v2/`,
+                    state,
                 });
             console.log('authurl', authUrl);
             return res.redirect(authUrl);
         }
-        //IF USER EXIST SAVE THE USER TO THE CUSTOMER TABLE
+        //IF USER EXIST
         const existingCustomer = yield customer_model_1.Customer.findOne({
-            email: userExists.email,
+            email: UserExists[0].email,
         });
         if (existingCustomer) {
             return res.redirect(`http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`);
         }
         const newCustomer = customer_model_1.Customer.build({
-            name: userExists.name,
-            email: userExists.email,
-            created_at: new Date().toDateString(),
-            username: userExists.name,
-            picture: 'http',
+            name: UserExists[0].name,
+            email: UserExists[0].email,
+            created_at: UserExists[0].created_at,
+            username: UserExists[0].nickname,
+            picture: UserExists[0].picture,
+            userId: UserExists[0].userId,
             inviteFrom: inviteFrom,
         });
         yield newCustomer.save();
@@ -150,24 +157,31 @@ const getAllCustomersBySender = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.getAllCustomersBySender = getAllCustomersBySender;
-const getAuthorizationCode = (req, res) => {
+// IF THE USER NOT EXIT IN AUTH0 THEN IT WILL CALLED
+const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const code = req.query.code;
-    const token = getTokenFromCode(code);
-};
-exports.getAuthorizationCode = getAuthorizationCode;
-const getTokenFromCode = (code) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokenResponse = yield axios_1.default.post(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/oauth/token`, {
-        grant_type: 'authorization_code',
-        client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
-        client_secret: 'evpFmimHkoQrqwl4k7pIZ1cMIn1wTR6b12s-eod1cqYe0WcNHptbcBrzskm_dz9v',
-        code: code,
-        redirect_uri: 'http://localhost:5000/api/v2/customer/callback',
-        scope: 'read:users'
-    }, {
-        headers: { 'Content-Type': 'application/json' }
+    const state = req.query.state;
+    if (!code || !state) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Authorization code or state is missing!',
+        });
+    }
+    const { inviteTo, inviteFrom } = JSON.parse(state);
+    const managementToken = yield (0, auth_utility_1.getManagementToken)();
+    const UserFromManagementToken = yield (0, auth_utility_1.getUserFromManagementToken)(managementToken, inviteTo);
+    const auth0User = UserFromManagementToken[0];
+    // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
+    const newCustomerAdded = customer_model_1.Customer.build({
+        name: auth0User.name,
+        email: auth0User.email,
+        created_at: auth0User.created_at,
+        username: auth0User.nickname,
+        userId: auth0User.user_id,
+        picture: auth0User.picture,
+        inviteFrom: inviteFrom,
     });
-    const accessToken = tokenResponse.data.access_token;
-    console.log('accessToken', accessToken);
-    // Store the access token securely (e.g., in a session)
-    return accessToken;
+    yield newCustomerAdded.save();
+    return res.redirect(`http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`);
 });
+exports.getAuthorizationCode = getAuthorizationCode;
