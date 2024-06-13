@@ -25,6 +25,9 @@ const customerSchema = new mongoose_1.default.Schema({
     inviteFrom: {
         type: String,
     },
+    userId: {
+        type: String,
+    },
 });
 customerSchema.statics.build = (attr) => {
     return new Customer(attr);

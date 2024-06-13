@@ -5,7 +5,6 @@ import {
   getManagementToken,
   getUserFromManagementToken,
 } from '../utility/auth.utility';
-import axios from 'axios';
 import qs from 'qs';
 import {
   IEmailArc,
@@ -109,13 +108,13 @@ const saveTheUser = async (req: Request, res: Response) => {
     if (UserExists.length == 0) {
       const state = JSON.stringify({ inviteTo, inviteFrom });
       const authUrl =
-        `https://dev-nl5xd2r8c23rplbr.us.auth0.com/authorize?` +
+        `https://${process.env.AUTH0_SPA_DOMAIN}/authorize?` +
         qs.stringify({
-          client_id: 'L3eoXDSx4mpLrxWxic528L3Rg2dEMopi',
+          client_id: process.env.AUTH0_SPA_DOMAIN,
           response_type: 'code',
-          redirect_uri: '',
+          redirect_uri: process.env.AUTH0_SPA_REDIRECT_URI,
           scope: 'openid profile email read:users',
-          audience: `https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/`,
+          audience: `https://${process.env.AUTH0_SPA_DOMAIN}/api/v2/`,
           state,
         });
       console.log('authurl', authUrl);
@@ -136,9 +135,10 @@ const saveTheUser = async (req: Request, res: Response) => {
     const newCustomer: ICustomerDocument = Customer.build({
       name: UserExists[0].name,
       email: UserExists[0].email,
-      created_at: new Date().toDateString(),
-      username: UserExists[0].name,
-      picture: 'http',
+      created_at: UserExists[0].created_at,
+      username: UserExists[0].nickname,
+      picture: UserExists[0].picture,
+      userId: UserExists[0].userId,
       inviteFrom: inviteFrom,
     });
 
@@ -205,15 +205,17 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     managementToken,
     inviteTo,
   );
+  const auth0User = UserFromManagementToken[0];
 
-  // SAVE THAT INTO THE CUSTOMER TABLE ALSO
+  // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
 
   const newCustomerAdded: ICustomerDocument = Customer.build({
-    name: UserFromManagementToken[0].given_name,
-    email: UserFromManagementToken[0].email,
-    created_at: new Date().toDateString(),
-    username: UserFromManagementToken[0].name,
-    picture: 'http',
+    name: auth0User.name,
+    email: auth0User.email,
+    created_at: auth0User.created_at,
+    username: auth0User.nickname,
+    userId: auth0User.user_id,
+    picture: auth0User.picture,
     inviteFrom: inviteFrom,
   });
 

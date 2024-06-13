@@ -7,6 +7,7 @@ interface ICustomer {
   username: String;
   picture: String;
   inviteFrom: String;
+  userId: String;
 }
 
 interface ICustomerDocument extends ICustomer, Document {}
