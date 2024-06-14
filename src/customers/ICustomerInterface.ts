@@ -8,6 +8,7 @@ interface ICustomer {
   picture: String;
   inviteFrom: String;
   userId: String;
+  role:String;
 }
 
 interface ICustomerDocument extends ICustomer, Document {}
@@ -21,7 +22,8 @@ interface IEmailArc {
   sender: {
     name: string;
     email: string;
-  };
+  },
+  role:string;
 }
 
 interface IEmailRequestBody {
@@ -29,7 +31,8 @@ interface IEmailRequestBody {
   sender: {
     name: string;
     email: string;
-  };
+  },
+  role:string;
 }
 
 export {

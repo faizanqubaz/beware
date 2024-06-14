@@ -8,4 +8,4 @@ const express_1 = __importDefault(require("express"));
 const user_controller_1 = require("./user.controller");
 const router = express_1.default.Router();
 exports.userRoute = router;
-router.post('/signup', user_controller_1.register);
+router.get('/userbyemail', user_controller_1.getAllUserByEmail);

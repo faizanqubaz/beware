@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
-import { register } from './user.controller';
+import { getAllUserByEmail } from './user.controller';
 const router = express.Router();
 
-router.post('/signup', register);
+router.get('/userbyemail', getAllUserByEmail);
 
 export { router as userRoute };
