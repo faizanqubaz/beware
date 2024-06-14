@@ -21,7 +21,7 @@ const getManagementToken = () => __awaiter(void 0, void 0, void 0, function* () 
     const clientId = process.env.MANAGEMENT_AUTH_CLIENT_ID;
     const clientSecret = process.env.MANAGEMENT_AUTH_CLIENT_SECRET;
     const audience = process.env.MANAGEMENT_AUDIENCE;
-    const tokenEndpoint = `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/oauth/token`;
+    const tokenEndpoint = `https://${auth0Domain}/oauth/token`;
     const response = yield axios_1.default.post(tokenEndpoint, {
         client_id: clientId,
         client_secret: clientSecret,

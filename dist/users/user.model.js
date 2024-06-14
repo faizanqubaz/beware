@@ -19,6 +19,15 @@ const userSchema = new mongoose_1.default.Schema({
     role: {
         type: String,
     },
+    created_at: {
+        type: String
+    },
+    authUserId: {
+        type: String
+    },
+    picture: {
+        type: String
+    }
 });
 userSchema.statics.build = (attr) => {
     return new User(attr);

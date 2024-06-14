@@ -1,6 +1,7 @@
 import express, { Response, Request } from 'express';
 import { Customer } from './customer.model';
 import { User } from '../users/user.model';
+import {sendEmailToUser} from '../utility/sendemail.utils'
 import {
   getManagementToken,
   getUserFromManagementToken,
@@ -11,27 +12,28 @@ import {
   ICustomerDocument,
   IEmailRequestBody,
 } from './ICustomerInterface';
-import nodemailer from 'nodemailer';
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import dotenv from 'dotenv';
+import { IUserDocument } from '../users/Iuser.interface';
+import { findCustomerBYEmail,findUserByEmail,saveCustomer, saveUserToDB } from '../utility/findone.utils';
 dotenv.config();
 
 const SendInvite = async (
   req: Request<{}, {}, IEmailRequestBody>,
   res: Response,
 ) => {
-  const { useremail, sender } = req.body;
+  const { useremail, sender, role } = req.body;
 
-  if (!useremail || !sender || !sender.name || !sender.email) {
+  if (!useremail || !sender || !sender.name || !sender.email || !role) {
     return res.status(400).json({
       status: 400,
-      message: 'email and sender information should not be empty!',
+      message: 'email sender and role information should not be empty!',
     });
   }
 
   const emailData: IEmailArc = {
     to: useremail,
     sender: sender,
+    role:role
   };
 
   try {
@@ -50,35 +52,6 @@ const SendInvite = async (
   }
 };
 
-const sendEmailToUser: (
-  emailData: IEmailArc,
-) => Promise<SMTPTransport.SentMessageInfo> = async (emailData: IEmailArc) => {
-  const staticSubject: string = 'Confirmation Link';
-  try {
-    const transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo> =
-      nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-    const mailData = {
-      from: process.env.SENDER_EMAIL,
-      to: emailData.to,
-      subject: staticSubject,
-      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:5000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}">link</a> for verification.</p>`,
-    };
-
-    const data: SMTPTransport.SentMessageInfo =
-      await transporter.sendMail(mailData);
-    return data;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
-  }
-};
 
 const saveTheUser = async (req: Request, res: Response) => {
   // get the senderemail and enduser email
@@ -87,8 +60,12 @@ const saveTheUser = async (req: Request, res: Response) => {
     | string
     | undefined;
 
+    const role: string | undefined = req.query.role as
+    | string
+    | undefined;
+
   // check if empty
-  if (!inviteTo || !inviteFrom) {
+  if (!inviteTo || !inviteFrom || !role) {
     return res.status(400).json({
       status: 400,
       message: 'Invalid or missing invite parameters!',
@@ -103,10 +80,11 @@ const saveTheUser = async (req: Request, res: Response) => {
       managementToken,
       inviteTo,
     );
-
+console.log('userExists',UserExists)
     // if user not exists
     if (UserExists.length == 0) {
-      const state = JSON.stringify({ inviteTo, inviteFrom });
+      const state = JSON.stringify({ inviteTo, inviteFrom, role });
+
       const authUrl =
         `https://${process.env.AUTH0_SPA_DOMAIN}/authorize?` +
         qs.stringify({
@@ -117,33 +95,37 @@ const saveTheUser = async (req: Request, res: Response) => {
           audience: `https://${process.env.AUTH0_SPA_DOMAIN}/api/v2/`,
           state,
         });
+
       console.log('authurl', authUrl);
 
       return res.redirect(authUrl);
     }
 
     //IF USER EXIST
-    const existingCustomer = await Customer.findOne({
-      email: UserExists[0].email,
-    });
+    const existingCustomer =await findCustomerBYEmail(UserExists[0].email)
 
     if (existingCustomer) {
       return res.redirect(
         `http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`,
       );
     }
-    const newCustomer: ICustomerDocument = Customer.build({
-      name: UserExists[0].name,
-      email: UserExists[0].email,
-      created_at: UserExists[0].created_at,
-      username: UserExists[0].nickname,
-      picture: UserExists[0].picture,
-      userId: UserExists[0].userId,
-      inviteFrom: inviteFrom,
-    });
 
-    await newCustomer.save();
-    console.log('Customer saved to database:', newCustomer);
+   const newCustomer= await saveCustomer(UserExists,inviteFrom,role)
+    
+
+    // SAVE THE USER ALSO
+  
+const existingAuth0User= await findUserByEmail(UserExists[0].email)
+    if (existingAuth0User) {
+      return res.redirect(`http://localhost:3000?email=${UserExists[0].email}&name=${UserExists[0].name}`);
+    }
+  
+    
+   const newUser=await saveUserToDB(UserExists,role)
+
+  
+
+    console.log('User saved to database:', newCustomer);
     return res.redirect(
       `http://localhost:3000?email=${newCustomer.email}&name=${newCustomer.name}`,
     );
@@ -198,7 +180,9 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     });
   }
 
-  const { inviteTo, inviteFrom } = JSON.parse(state);
+  const { inviteTo, inviteFrom,role } = JSON.parse(state);
+  console.log('inviteto',inviteTo)
+  console.log('inviteFrom',inviteFrom)
   const managementToken = await getManagementToken();
 
   const UserFromManagementToken = await getUserFromManagementToken(
@@ -206,8 +190,20 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     inviteTo,
   );
   const auth0User = UserFromManagementToken[0];
-
+  console.log('auth0User',auth0User)
+const authUserId=auth0User.user_id;
+console.log('authuserId',authUserId)
   // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
+
+
+// CHECK IF THE CUSTOMER ALREADY EXISTS
+const customerExists =await findCustomerBYEmail(auth0User.email)
+
+if (customerExists) {
+  return res.redirect(
+    `http://localhost:3000?email=${customerExists.email}&name=${customerExists.name}`,
+  );
+}
 
   const newCustomerAdded: ICustomerDocument = Customer.build({
     name: auth0User.name,
@@ -217,9 +213,33 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     userId: auth0User.user_id,
     picture: auth0User.picture,
     inviteFrom: inviteFrom,
+    role:role
   });
 
   await newCustomerAdded.save();
+
+  // CHECK FOR USER EXISTS WITH THE EMAIL FIRST
+  const existingUser = await User.findOne({ email: auth0User.email });
+
+  if (existingUser) {
+    return res.redirect(`http://localhost:3000?email=${existingUser.email}&name=${existingUser.name}`);
+  }
+
+  
+  const newUserAdded: IUserDocument = User.build({
+    name: auth0User.name,
+    email: auth0User.email,
+    created_at: auth0User.created_at,
+    username: auth0User.nickname,
+    authUserId: auth0User.user_id,
+    picture: auth0User.picture,
+    role:role
+  });
+
+  await newUserAdded.save();
+
+  // save roles to auth0 user also
+
 
   return res.redirect(
     `http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`,

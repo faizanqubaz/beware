@@ -28,6 +28,9 @@ const customerSchema = new mongoose_1.default.Schema({
     userId: {
         type: String,
     },
+    role: {
+        type: String
+    }
 });
 customerSchema.statics.build = (attr) => {
     return new Customer(attr);

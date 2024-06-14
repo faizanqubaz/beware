@@ -2,39 +2,42 @@ import express, { Response, Request } from 'express';
 import { IUserDocument } from './Iuser.interface';
 import { User } from './user.model';
 import dotenv from 'dotenv';
+import { findUserByEmail } from '../utility/findone.utils';
 dotenv.config();
 
-const register = async (req: Request, res: Response) => {
-  const { email, name, username } = req.body;
 
-  if (!email || !name || !username) {
+const getAllUserByEmail = async (req: Request, res: Response) => {
+  const { email: useremail } = req.query;
+
+  if (!useremail) {
     return res.status(400).json({
       status: 400,
-      message: 'email and name information should not be empty!',
+      message: 'userEmail query parameter is required!',
     });
   }
 
   try {
-    const newuser: IUserDocument = User.build({
-      name: name,
-      email: email,
-      username: username,
-      role: 'user',
-    });
+    const user = await findUserByEmail(useremail as string);
 
-    const userData = await newuser.save();
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: 'No User found for this email',
+      });
+    }
 
-    res.status(201).json({
+    return res.status(200).json({
       status: 200,
-      message: 'user saved to the database',
-      data: userData,
+      message: 'User found',
+      data: user, // Include user data in the response if needed
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       status: 500,
-      message: `Error sending email: ${error}`,
+      message: 'An error occurred while fetching the user',
     });
   }
-};
+}
 
-export { register };
+export { getAllUserByEmail };
