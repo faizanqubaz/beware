@@ -88,7 +88,7 @@ console.log('userExists',UserExists)
       const authUrl =
         `https://${process.env.AUTH0_SPA_DOMAIN}/authorize?` +
         qs.stringify({
-          client_id: process.env.AUTH0_SPA_DOMAIN,
+          client_id: process.env.AUTH0_SPA_LIENT_ID,
           response_type: 'code',
           redirect_uri: process.env.AUTH0_SPA_REDIRECT_URI,
           scope: 'openid profile email read:users',

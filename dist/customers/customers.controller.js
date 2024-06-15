@@ -150,6 +150,8 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
     const UserFromManagementToken = yield (0, auth_utility_1.getUserFromManagementToken)(managementToken, inviteTo);
     const auth0User = UserFromManagementToken[0];
     console.log('auth0User', auth0User);
+    const authUserId = auth0User.user_id;
+    console.log('authuserId', authUserId);
     // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
     // CHECK IF THE CUSTOMER ALREADY EXISTS
     const customerExists = yield (0, findone_utils_1.findCustomerBYEmail)(auth0User.email);
@@ -182,6 +184,7 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
         role: role
     });
     yield newUserAdded.save();
+    // save roles to auth0 user also
     return res.redirect(`http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`);
 });
 exports.getAuthorizationCode = getAuthorizationCode;
