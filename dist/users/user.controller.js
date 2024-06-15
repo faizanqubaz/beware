@@ -13,8 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllUserByEmail = void 0;
-const user_model_1 = require("./user.model");
 const dotenv_1 = __importDefault(require("dotenv"));
+const findone_utils_1 = require("../utility/findone.utils");
 dotenv_1.default.config();
 const getAllUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email: useremail } = req.query;
@@ -25,23 +25,24 @@ const getAllUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
     try {
-        const users = yield user_model_1.User.find({ email: useremail });
-        if (users.length === 0) {
-            return res.status(200).json({
-                status: 200,
+        const user = yield (0, findone_utils_1.findUserByEmail)(useremail);
+        if (!user) {
+            return res.status(404).json({
+                status: 404,
                 message: 'No User found for this email',
             });
         }
-        res.status(200).json({
+        return res.status(200).json({
             status: 200,
-            data: users,
+            message: 'User found',
+            data: user, // Include user data in the response if needed
         });
     }
     catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({
+        console.error(error);
+        return res.status(500).json({
             status: 500,
-            message: 'Error fetching users',
+            message: 'An error occurred while fetching the user',
         });
     }
 });
