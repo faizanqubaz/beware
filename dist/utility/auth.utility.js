@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserFromManagementToken = exports.getManagementToken = void 0;
+exports.addRoleToUser = exports.getUserFromManagementToken = exports.getManagementToken = void 0;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -41,3 +41,56 @@ const getUserFromManagementToken = (accesToken, email) => __awaiter(void 0, void
     return users;
 });
 exports.getUserFromManagementToken = getUserFromManagementToken;
+const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Check if the role already exists
+        const rolesOptions = {
+            method: 'GET',
+            url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
+            headers: { authorization: `Bearer ${token}` }
+        };
+        const rolesResponse = yield (0, axios_1.default)(rolesOptions);
+        let role = rolesResponse.data.find((role) => role.name === roleName);
+        console.log('role', role);
+        // If the role doesn't exist, create it
+        if (!role) {
+            const createRoleOptions = {
+                method: 'POST',
+                url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
+                headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+                data: { name: roleName, description: `Role for ${roleName}` }
+            };
+            const createRoleResponse = yield (0, axios_1.default)(createRoleOptions);
+            role = createRoleResponse.data;
+        }
+        // // Check if the user already has the role
+        const userRolesOptions = {
+            method: 'GET',
+            url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
+            headers: { authorization: `Bearer ${token}` }
+        };
+        const userRolesResponse = yield (0, axios_1.default)(userRolesOptions);
+        const userRoles = userRolesResponse.data;
+        const hasRole = userRoles.some((userRole) => userRole.id === role.id);
+        if (!hasRole) {
+            // Assign the role to the user
+            const assignRoleOptions = {
+                method: 'POST',
+                url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                },
+                data: {
+                    roles: [role.id]
+                }
+            };
+            yield (0, axios_1.default)(assignRoleOptions);
+        }
+    }
+    catch (error) {
+        console.error('Error adding role to user:', error);
+        throw error;
+    }
+});
+exports.addRoleToUser = addRoleToUser;

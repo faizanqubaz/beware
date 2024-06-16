@@ -28,9 +28,9 @@ const customerSchema = new mongoose.Schema({
   userId: {
     type: String,
   },
-  role:{
-    type:String
-  }
+  role: {
+    type: String,
+  },
 });
 
 customerSchema.statics.build = (attr: ICustomer) => {

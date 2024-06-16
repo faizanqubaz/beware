@@ -15,15 +15,15 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
   },
-  created_at:{
-    type:String
+  created_at: {
+    type: String,
   },
-  authUserId:{
-    type:String
+  authUserId: {
+    type: String,
   },
-  picture:{
-    type:String
-  }
+  picture: {
+    type: String,
+  },
 });
 
 userSchema.statics.build = (attr: IUser) => {

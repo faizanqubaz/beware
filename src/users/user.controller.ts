@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import { findUserByEmail } from '../utility/findone.utils';
 dotenv.config();
 
-
 const getAllUserByEmail = async (req: Request, res: Response) => {
   const { email: useremail } = req.query;
 
@@ -38,6 +37,6 @@ const getAllUserByEmail = async (req: Request, res: Response) => {
       message: 'An error occurred while fetching the user',
     });
   }
-}
+};
 
 export { getAllUserByEmail };
