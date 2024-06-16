@@ -9,3 +9,4 @@ const user_controller_1 = require("./user.controller");
 const router = express_1.default.Router();
 exports.userRoute = router;
 router.get('/userbyemail', user_controller_1.getAllUserByEmail);
+router.delete('/:userId', user_controller_1.deleteUserById);

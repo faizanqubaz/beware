@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllUserByEmail = void 0;
+exports.deleteUserById = exports.getAllUserByEmail = void 0;
+const user_model_1 = require("./user.model");
 const dotenv_1 = __importDefault(require("dotenv"));
 const findone_utils_1 = require("../utility/findone.utils");
 dotenv_1.default.config();
@@ -47,3 +48,17 @@ const getAllUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getAllUserByEmail = getAllUserByEmail;
+const deleteUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.params;
+        const deletedUser = yield user_model_1.User.findByIdAndDelete(userId);
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User deleted successfully', deletedUser });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+exports.deleteUserById = deleteUserById;

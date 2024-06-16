@@ -101,4 +101,20 @@ const addRoleToUser = async (
   }
 };
 
-export { getManagementToken, getUserFromManagementToken, addRoleToUser };
+const deleteAuth0User = async (auth0UserId: any, token: string) => {
+  await axios.delete(
+    `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+};
+
+export {
+  getManagementToken,
+  getUserFromManagementToken,
+  addRoleToUser,
+  deleteAuth0User,
+};

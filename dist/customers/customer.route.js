@@ -12,4 +12,5 @@ router.post('/sendinvite', customers_controller_1.SendInvite);
 router.get('/confirmation-link', customers_controller_1.saveTheUser);
 router.get('/customers', customers_controller_1.getAllCustomersBySender);
 router.get('/callback', customers_controller_1.getAuthorizationCode);
-router.get('/:customerId/customer', customers_controller_1.getCustomerById);
+router.get('/:customerId/customers', customers_controller_1.getCustomerById);
+router.delete('/:customerId', customers_controller_1.deleteCustomerById);

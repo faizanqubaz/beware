@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCustomerById = exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
+exports.deleteCustomerById = exports.getCustomerById = exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
 const mongoose_1 = __importDefault(require("mongoose"));
 const sendemail_utils_1 = require("../utility/sendemail.utils");
@@ -196,7 +196,9 @@ const getCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
     }
     try {
-        const customer = yield customer_model_1.Customer.findById(customerId).exec();
+        const customer = yield customer_model_1.Customer.findById(customerId)
+            .select('-paints')
+            .exec();
         if (!customer) {
             return res.status(404).json({
                 status: 404,
@@ -218,3 +220,17 @@ const getCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getCustomerById = getCustomerById;
+const deleteCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { customerId } = req.params;
+        const deletedCustomer = yield customer_model_1.Customer.findByIdAndDelete(customerId);
+        if (!deletedCustomer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+        res.json({ message: 'Customer deleted successfully', deletedCustomer });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+exports.deleteCustomerById = deleteCustomerById;

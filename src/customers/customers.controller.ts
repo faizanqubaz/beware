@@ -279,10 +279,32 @@ const getCustomerById = async (req: Request, res: Response) => {
   }
 };
 
+const deleteCustomerById = async (req: Request, res: Response) => {
+  try {
+    const { customerId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid userId format',
+      });
+    }
+    const deletedCustomer = await Customer.findByIdAndDelete(customerId);
+
+    if (!deletedCustomer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    res.json({ message: 'Customer deleted successfully', deletedCustomer });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
 export {
   SendInvite,
   saveTheUser,
   getAllCustomersBySender,
   getAuthorizationCode,
   getCustomerById,
+  deleteCustomerById,
 };
