@@ -20,14 +20,14 @@ const userSchema = new mongoose_1.default.Schema({
         type: String,
     },
     created_at: {
-        type: String
+        type: String,
     },
     authUserId: {
-        type: String
+        type: String,
     },
     picture: {
-        type: String
-    }
+        type: String,
+    },
 });
 userSchema.statics.build = (attr) => {
     return new User(attr);

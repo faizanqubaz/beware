@@ -29,8 +29,8 @@ const customerSchema = new mongoose_1.default.Schema({
         type: String,
     },
     role: {
-        type: String
-    }
+        type: String,
+    },
 });
 customerSchema.statics.build = (attr) => {
     return new Customer(attr);
