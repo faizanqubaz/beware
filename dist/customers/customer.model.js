@@ -51,7 +51,7 @@ const customerSchema = new mongoose_1.default.Schema({
     role: {
         type: String,
     },
-    paints: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Paint' }],
+    paints: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Paints', default: [] }],
 });
 customerSchema.statics.build = (attr) => {
     return new Customer(attr);
