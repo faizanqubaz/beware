@@ -23,38 +23,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Customer = void 0;
+exports.Paint = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const customerSchema = new mongoose_1.default.Schema({
-    name: {
-        type: String,
+const PaintSchema = new mongoose_1.Schema({
+    customerId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Customer',
         required: true,
     },
-    email: {
-        type: String,
-    },
-    username: {
-        type: String,
-    },
-    created_at: {
-        type: String,
-    },
-    picture: {
-        type: String,
-    },
-    inviteFrom: {
-        type: String,
-    },
-    userId: {
-        type: String,
-    },
-    role: {
-        type: String,
-    },
-    paints: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Paint' }],
-});
-customerSchema.statics.build = (attr) => {
-    return new Customer(attr);
-};
-const Customer = mongoose_1.default.model('Customers', customerSchema);
-exports.Customer = Customer;
+    colorName: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true },
+    colorCode: { type: String, required: true },
+    yearRange: { type: String, required: true },
+    brand: { type: String, required: true },
+    size: { type: String, required: true },
+}, { timestamps: true });
+const Paint = mongoose_1.default.model('Paints', PaintSchema);
+exports.Paint = Paint;
