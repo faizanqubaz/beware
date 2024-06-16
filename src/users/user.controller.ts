@@ -4,7 +4,12 @@ import mongoose from 'mongoose';
 import { User } from './user.model';
 import dotenv from 'dotenv';
 import { findUserByEmail } from '../utility/findone.utils';
-import { deleteAuth0User, getManagementToken } from '../utility/auth.utility';
+import {
+  deleteAuth0User,
+  getManagementToken,
+  updateAuth0User,
+  updateAuth0UserRole,
+} from '../utility/auth.utility';
 dotenv.config();
 
 const getAllUserByEmail = async (req: Request, res: Response) => {
@@ -73,4 +78,73 @@ const deleteUserById = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllUserByEmail, deleteUserById };
+const updateUserById = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const updateData = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid userId format',
+      });
+    }
+
+    const user: any = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const auth0UserId = user.auth0UserId;
+
+    // Update user in Auth0
+    const token = await getManagementToken();
+    await updateAuth0User(auth0UserId, updateData, token);
+
+    // Update user in MongoDB
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
+
+    res.json({ message: 'User updated successfully', updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid userId format',
+      });
+    }
+
+    const user: any = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const auth0UserId = user.auth0UserId;
+
+    // Update user's role in Auth0
+    const token = await getManagementToken();
+    await updateAuth0UserRole(auth0UserId, role, token);
+
+    // Update user's role in MongoDB
+    user.role = role;
+    const updatedUser = await user.save();
+
+    res.json({ message: 'User role updated successfully', updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export { getAllUserByEmail, deleteUserById, updateUserById, updateUserRole };

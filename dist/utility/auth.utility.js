@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addRoleToUser = exports.getUserFromManagementToken = exports.getManagementToken = void 0;
+exports.updateAuth0UserRole = exports.updateAuth0User = exports.deleteAuth0User = exports.addRoleToUser = exports.getUserFromManagementToken = exports.getManagementToken = void 0;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -97,3 +97,27 @@ const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, voi
     }
 });
 exports.addRoleToUser = addRoleToUser;
+const deleteAuth0User = (auth0UserId, token) => __awaiter(void 0, void 0, void 0, function* () {
+    yield axios_1.default.delete(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+});
+exports.deleteAuth0User = deleteAuth0User;
+const updateAuth0User = (auth0UserId, data, token) => __awaiter(void 0, void 0, void 0, function* () {
+    yield axios_1.default.patch(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, data, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+});
+exports.updateAuth0User = updateAuth0User;
+const updateAuth0UserRole = (auth0UserId, role, token) => __awaiter(void 0, void 0, void 0, function* () {
+    yield axios_1.default.patch(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, { roles: [role] }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+});
+exports.updateAuth0UserRole = updateAuth0UserRole;

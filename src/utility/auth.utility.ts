@@ -112,9 +112,39 @@ const deleteAuth0User = async (auth0UserId: any, token: string) => {
   );
 };
 
+const updateAuth0User = async (auth0UserId: any, data: any, token: string) => {
+  await axios.patch(
+    `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+};
+
+const updateAuth0UserRole = async (
+  auth0UserId: any,
+  role: any,
+  token: string,
+) => {
+  await axios.patch(
+    `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`,
+    { roles: [role] },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+};
+
 export {
   getManagementToken,
   getUserFromManagementToken,
   addRoleToUser,
   deleteAuth0User,
+  updateAuth0User,
+  updateAuth0UserRole,
 };
