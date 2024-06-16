@@ -8,13 +8,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPaintAndAssociatedCustomers = exports.savePaintsofCustomer = void 0;
+exports.getCustomerWithPaints = exports.savePaintsofCustomer = void 0;
 const customer_model_1 = require("../customers/customer.model");
+const mongoose_1 = __importDefault(require("mongoose"));
 const paint_model_1 = require("./paint.model");
 const savePaintsofCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { customerId } = req.params;
     const { colorName, quantity, price, colorCode, yearRange, brand, size } = req.body;
+    if (!mongoose_1.default.Types.ObjectId.isValid(customerId)) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid customerId format',
+        });
+    }
     try {
         // Check if customer exists
         const customer = yield customer_model_1.Customer.findById(customerId);
@@ -37,6 +47,13 @@ const savePaintsofCustomer = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
         // Save the paint record
         const savedPaint = yield newPaint.save();
+        // Ensure customer.paints is initialized properly
+        if (!customer.paints) {
+            customer.paints = [];
+        }
+        // Update the customer's paints array with the saved paint's _id
+        customer.paints.push(savedPaint._id); // Explicitly cast to mongoose.Types.ObjectId
+        yield customer.save();
         res.status(201).json({
             status: 201,
             message: 'Paint record saved successfully',
@@ -52,34 +69,41 @@ const savePaintsofCustomer = (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.savePaintsofCustomer = savePaintsofCustomer;
-const getPaintAndAssociatedCustomers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { paintId, customerId } = req.params;
+const getCustomerWithPaints = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { customerId } = req.params;
+    if (!mongoose_1.default.Types.ObjectId.isValid(customerId)) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid customerId format',
+        });
+    }
     try {
-        // Retrieve the paint document by its ID
-        const paint = yield paint_model_1.Paint.findById(paintId);
-        if (!paint) {
-            res.status(404).json({
+        // Find the customer by ID and populate the 'paints' field with paint objects
+        console.log('customerid', customerId);
+        const customer = yield customer_model_1.Customer.findById(customerId).populate('paints');
+        if (!customer) {
+            return res.status(404).json({
                 status: 404,
-                message: 'Paint not found',
+                message: 'Customer not found',
             });
-            return;
         }
-        // Find customers who have the paint ID in their paints array
-        const customers = yield customer_model_1.Customer.find({ paints: paintId });
         res.status(200).json({
             status: 200,
+            message: 'customer with the paints',
             data: {
-                paint,
-                customers,
+                customerId: customer._id,
+                name: customer.name,
+                email: customer.email,
+                paints: customer.paints,
             },
         });
     }
     catch (error) {
-        console.error('Error retrieving paint or associated customers:', error);
+        console.error('Error retrieving customer with paints:', error);
         res.status(500).json({
             status: 500,
             message: 'Internal server error',
         });
     }
 });
-exports.getPaintAndAssociatedCustomers = getPaintAndAssociatedCustomers;
+exports.getCustomerWithPaints = getCustomerWithPaints;

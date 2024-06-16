@@ -1,5 +1,6 @@
 import express, { Response, Request } from 'express';
 import { Customer } from './customer.model';
+import mongoose from 'mongoose';
 import { User } from '../users/user.model';
 import { sendEmailToUser } from '../utility/sendemail.utils';
 import {
@@ -234,37 +235,46 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
   );
 };
 
-// GET CUSTOMER BY EMAIL
-const getCustomerByEmail = async (req: Request, res: Response) => {
-  const { email: useremail } = req.query;
+// GET CUSTOMER BY ID
+const getCustomerById = async (req: Request, res: Response) => {
+  const { customerId } = req.params;
 
-  if (!useremail) {
+  if (!customerId) {
     return res.status(400).json({
       status: 400,
-      message: 'userEmail query parameter is required!',
+      message: 'customerIdId parameter is required!',
+    });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(customerId)) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid customerId format',
     });
   }
 
   try {
-    const customer = await findCustomerBYEmail(useremail as string);
+    const customer = await Customer.findById(customerId)
+      .select('-paints')
+      .exec();
 
     if (!customer) {
       return res.status(404).json({
         status: 404,
-        message: 'No Customer found for this email',
+        message: 'No Customer found for this ID',
       });
     }
 
     return res.status(200).json({
       status: 200,
       message: 'Customer found',
-      data: customer, // Include user data in the response if needed
+      data: customer,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       status: 500,
-      message: 'An error occurred while fetching the user',
+      message: 'An error occurred while fetching the customer',
     });
   }
 };
@@ -274,5 +284,5 @@ export {
   saveTheUser,
   getAllCustomersBySender,
   getAuthorizationCode,
-  getCustomerByEmail,
+  getCustomerById,
 };

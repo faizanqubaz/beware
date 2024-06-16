@@ -9,4 +9,4 @@ const paints_controller_1 = require("./paints.controller");
 const router = express_1.default.Router();
 exports.paintsRoute = router;
 router.post('/:customerId/save', paints_controller_1.savePaintsofCustomer);
-router.post('/:paintId/customers', paints_controller_1.getPaintAndAssociatedCustomers);
+router.get('/:customerId/paints', paints_controller_1.getCustomerWithPaints);

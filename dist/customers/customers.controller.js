@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCustomerByEmail = exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
+exports.getCustomerById = exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
+const mongoose_1 = __importDefault(require("mongoose"));
 const sendemail_utils_1 = require("../utility/sendemail.utils");
 const auth_utility_1 = require("../utility/auth.utility");
 const qs_1 = __importDefault(require("qs"));
@@ -179,35 +180,41 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
     return res.redirect(`http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`);
 });
 exports.getAuthorizationCode = getAuthorizationCode;
-// GET CUSTOMER BY EMAIL
-const getCustomerByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email: useremail } = req.query;
-    if (!useremail) {
+// GET CUSTOMER BY ID
+const getCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { customerId } = req.params;
+    if (!customerId) {
         return res.status(400).json({
             status: 400,
-            message: 'userEmail query parameter is required!',
+            message: 'customerIdId parameter is required!',
+        });
+    }
+    if (!mongoose_1.default.Types.ObjectId.isValid(customerId)) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid customerId format',
         });
     }
     try {
-        const customer = yield (0, findone_utils_1.findCustomerBYEmail)(useremail);
+        const customer = yield customer_model_1.Customer.findById(customerId).exec();
         if (!customer) {
             return res.status(404).json({
                 status: 404,
-                message: 'No Customer found for this email',
+                message: 'No Customer found for this ID',
             });
         }
         return res.status(200).json({
             status: 200,
             message: 'Customer found',
-            data: customer, // Include user data in the response if needed
+            data: customer,
         });
     }
     catch (error) {
         console.error(error);
         return res.status(500).json({
             status: 500,
-            message: 'An error occurred while fetching the user',
+            message: 'An error occurred while fetching the customer',
         });
     }
 });
-exports.getCustomerByEmail = getCustomerByEmail;
+exports.getCustomerById = getCustomerById;
