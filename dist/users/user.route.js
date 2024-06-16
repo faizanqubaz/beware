@@ -10,3 +10,5 @@ const router = express_1.default.Router();
 exports.userRoute = router;
 router.get('/userbyemail', user_controller_1.getAllUserByEmail);
 router.delete('/:userId', user_controller_1.deleteUserById);
+router.put('/:userId', user_controller_1.updateUserById);
+router.put('/:userId', user_controller_1.updateUserRole);

@@ -223,6 +223,12 @@ exports.getCustomerById = getCustomerById;
 const deleteCustomerById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { customerId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(customerId)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid userId format',
+            });
+        }
         const deletedCustomer = yield customer_model_1.Customer.findByIdAndDelete(customerId);
         if (!deletedCustomer) {
             return res.status(404).json({ message: 'Customer not found' });
