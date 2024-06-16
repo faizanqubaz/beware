@@ -24,28 +24,28 @@ const findUserByEmail = (email) => __awaiter(void 0, void 0, void 0, function* (
     return user;
 });
 exports.findUserByEmail = findUserByEmail;
-const saveCustomer = (UserExists, inviteFrom, role) => __awaiter(void 0, void 0, void 0, function* () {
+const saveCustomer = (user, inviteFrom, role) => __awaiter(void 0, void 0, void 0, function* () {
     const newCustomer = customer_model_1.Customer.build({
-        name: UserExists[0].name,
-        email: UserExists[0].email,
-        created_at: UserExists[0].created_at,
-        username: UserExists[0].nickname,
-        picture: UserExists[0].picture,
-        userId: UserExists[0].userId,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+        username: user.nickname,
+        picture: user.picture,
+        userId: user.userId,
         inviteFrom: inviteFrom,
         role: role
     });
     return yield newCustomer.save();
 });
 exports.saveCustomer = saveCustomer;
-const saveUserToDB = (UserExists, role) => __awaiter(void 0, void 0, void 0, function* () {
+const saveUserToDB = (user, role) => __awaiter(void 0, void 0, void 0, function* () {
     const newUserAdded = user_model_1.User.build({
-        name: UserExists[0].name,
-        email: UserExists[0].email,
-        created_at: UserExists[0].created_at,
-        username: UserExists[0].nickname,
-        authUserId: UserExists[0].user_id,
-        picture: UserExists[0].picture,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+        username: user.nickname,
+        authUserId: user.user_id,
+        picture: user.picture,
         role: role,
     });
     return yield newUserAdded.save();

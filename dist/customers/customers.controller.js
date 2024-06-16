@@ -14,19 +14,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
-const user_model_1 = require("../users/user.model");
 const sendemail_utils_1 = require("../utility/sendemail.utils");
 const auth_utility_1 = require("../utility/auth.utility");
 const qs_1 = __importDefault(require("qs"));
+const ICustomerInterface_1 = require("./ICustomerInterface");
 const dotenv_1 = __importDefault(require("dotenv"));
 const findone_utils_1 = require("../utility/findone.utils");
 dotenv_1.default.config();
 const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { useremail, sender, role } = req.body;
-    if (!useremail || !sender || !sender.name || !sender.email || !role) {
+    if (!useremail || !sender || !sender.name || !sender.email || role === undefined) {
         return res.status(400).json({
             status: 400,
             message: 'email sender and role information should not be empty!',
+        });
+    }
+    const roleName = ICustomerInterface_1.roleMapping[role];
+    if (!roleName) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid role!',
         });
     }
     const emailData = {
@@ -54,12 +61,19 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // get the senderemail and enduser email
     const inviteTo = req.query.inviteTo;
     const inviteFrom = req.query.inviteFrom;
-    const role = req.query.role;
+    const role = parseInt(req.query.role, 10);
     // check if empty
-    if (!inviteTo || !inviteFrom || !role) {
+    if (!inviteTo || !inviteFrom || role === undefined || isNaN(role)) {
         return res.status(400).json({
             status: 400,
             message: 'Invalid or missing invite parameters!',
+        });
+    }
+    const roleName = ICustomerInterface_1.roleMapping[role];
+    if (!roleName) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid role!',
         });
     }
     try {
@@ -72,7 +86,7 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             const state = JSON.stringify({ inviteTo, inviteFrom, role });
             const authUrl = `https://${process.env.AUTH0_SPA_DOMAIN}/authorize?` +
                 qs_1.default.stringify({
-                    client_id: process.env.AUTH0_SPA_DOMAIN,
+                    client_id: process.env.AUTH0_SPA_LIENT_ID,
                     response_type: 'code',
                     redirect_uri: process.env.AUTH0_SPA_REDIRECT_URI,
                     scope: 'openid profile email read:users',
@@ -83,19 +97,19 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return res.redirect(authUrl);
         }
         //IF USER EXIST
-        const existingCustomer = yield (0, findone_utils_1.findCustomerBYEmail)(UserExists[0].email);
+        const auth0ExistingUser = UserExists[0];
+        const existingCustomer = yield (0, findone_utils_1.findCustomerBYEmail)(auth0ExistingUser.email);
         if (existingCustomer) {
-            return res.redirect(`http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`);
+            return res.redirect(`http://localhost:3000`);
         }
-        const newCustomer = yield (0, findone_utils_1.saveCustomer)(UserExists, inviteFrom, role);
+        const newCustomer = yield (0, findone_utils_1.saveCustomer)(auth0ExistingUser, inviteFrom, roleName);
         // SAVE THE USER ALSO
-        const existingAuth0User = yield (0, findone_utils_1.findUserByEmail)(UserExists[0].email);
+        const existingAuth0User = yield (0, findone_utils_1.findUserByEmail)(auth0ExistingUser.email);
         if (existingAuth0User) {
-            return res.redirect(`http://localhost:3000?email=${UserExists[0].email}&name=${UserExists[0].name}`);
+            return res.redirect(`http://localhost:3000`);
         }
-        const newUser = yield (0, findone_utils_1.saveUserToDB)(UserExists, role);
-        console.log('User saved to database:', newCustomer);
-        return res.redirect(`http://localhost:3000?email=${newCustomer.email}&name=${newCustomer.name}`);
+        yield (0, findone_utils_1.saveUserToDB)(auth0ExistingUser, roleName);
+        return res.redirect(`http://localhost:3000`);
     }
     catch (error) {
         console.error('Error checking if user exists:', error);
@@ -144,8 +158,13 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     const { inviteTo, inviteFrom, role } = JSON.parse(state);
-    console.log('inviteto', inviteTo);
-    console.log('inviteFrom', inviteFrom);
+    const roleName = ICustomerInterface_1.roleMapping[role];
+    if (!roleName) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Invalid role in state!',
+        });
+    }
     const managementToken = yield (0, auth_utility_1.getManagementToken)();
     const UserFromManagementToken = yield (0, auth_utility_1.getUserFromManagementToken)(managementToken, inviteTo);
     const auth0User = UserFromManagementToken[0];
@@ -153,38 +172,20 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
     const authUserId = auth0User.user_id;
     console.log('authuserId', authUserId);
     // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
+    // save roles to auth0 user also
+    yield (0, auth_utility_1.addRoleToUser)(managementToken, authUserId, roleName);
     // CHECK IF THE CUSTOMER ALREADY EXISTS
     const customerExists = yield (0, findone_utils_1.findCustomerBYEmail)(auth0User.email);
     if (customerExists) {
         return res.redirect(`http://localhost:3000?email=${customerExists.email}&name=${customerExists.name}`);
     }
-    const newCustomerAdded = customer_model_1.Customer.build({
-        name: auth0User.name,
-        email: auth0User.email,
-        created_at: auth0User.created_at,
-        username: auth0User.nickname,
-        userId: auth0User.user_id,
-        picture: auth0User.picture,
-        inviteFrom: inviteFrom,
-        role: role
-    });
-    yield newCustomerAdded.save();
+    yield (0, findone_utils_1.saveCustomer)(auth0User, inviteFrom, role);
     // CHECK FOR USER EXISTS WITH THE EMAIL FIRST
-    const existingUser = yield user_model_1.User.findOne({ email: auth0User.email });
+    const existingUser = yield (0, findone_utils_1.findUserByEmail)(auth0User.email);
     if (existingUser) {
         return res.redirect(`http://localhost:3000?email=${existingUser.email}&name=${existingUser.name}`);
     }
-    const newUserAdded = user_model_1.User.build({
-        name: auth0User.name,
-        email: auth0User.email,
-        created_at: auth0User.created_at,
-        username: auth0User.nickname,
-        authUserId: auth0User.user_id,
-        picture: auth0User.picture,
-        role: role
-    });
-    yield newUserAdded.save();
-    // save roles to auth0 user also
+    yield (0, findone_utils_1.saveUserToDB)(auth0User, roleName);
     return res.redirect(`http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`);
 });
 exports.getAuthorizationCode = getAuthorizationCode;

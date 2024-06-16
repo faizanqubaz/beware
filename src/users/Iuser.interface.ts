@@ -4,9 +4,9 @@ interface IUser {
   name: String;
   email: String;
   username: String;
-  created_at:String;
-  authUserId:String;
-  picture:String;
+  created_at: String;
+  authUserId: String;
+  picture: String;
   role: String;
 }
 
@@ -21,8 +21,8 @@ interface IEmailArc {
   sender: {
     name: string;
     email: string;
-  },
-  role:string;
+  };
+  role: string;
 }
 
 interface IEmailRequestBody {

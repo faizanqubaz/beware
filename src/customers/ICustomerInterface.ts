@@ -8,7 +8,7 @@ interface ICustomer {
   picture: String;
   inviteFrom: String;
   userId: String;
-  role:String;
+  role: String;
 }
 
 interface ICustomerDocument extends ICustomer, Document {}
@@ -22,8 +22,8 @@ interface IEmailArc {
   sender: {
     name: string;
     email: string;
-  },
-  role:string;
+  };
+  role: string;
 }
 
 interface IEmailRequestBody {
@@ -31,9 +31,15 @@ interface IEmailRequestBody {
   sender: {
     name: string;
     email: string;
-  },
-  role:string;
+  };
+  role: number;
 }
+
+const roleMapping: { [key: number]: string } = {
+  0: 'enduser',
+  1: 'admin',
+  2: 'superadmin',
+};
 
 export {
   ICustomer,
@@ -41,4 +47,5 @@ export {
   ICustomerModel,
   IEmailArc,
   IEmailRequestBody,
+  roleMapping,
 };

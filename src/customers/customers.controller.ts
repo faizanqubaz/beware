@@ -1,8 +1,9 @@
 import express, { Response, Request } from 'express';
 import { Customer } from './customer.model';
 import { User } from '../users/user.model';
-import {sendEmailToUser} from '../utility/sendemail.utils'
+import { sendEmailToUser } from '../utility/sendemail.utils';
 import {
+  addRoleToUser,
   getManagementToken,
   getUserFromManagementToken,
 } from '../utility/auth.utility';
@@ -11,10 +12,16 @@ import {
   IEmailArc,
   ICustomerDocument,
   IEmailRequestBody,
+  roleMapping,
 } from './ICustomerInterface';
 import dotenv from 'dotenv';
 import { IUserDocument } from '../users/Iuser.interface';
-import { findCustomerBYEmail,findUserByEmail,saveCustomer, saveUserToDB } from '../utility/findone.utils';
+import {
+  findCustomerBYEmail,
+  findUserByEmail,
+  saveCustomer,
+  saveUserToDB,
+} from '../utility/findone.utils';
 dotenv.config();
 
 const SendInvite = async (
@@ -23,17 +30,32 @@ const SendInvite = async (
 ) => {
   const { useremail, sender, role } = req.body;
 
-  if (!useremail || !sender || !sender.name || !sender.email || !role) {
+  if (
+    !useremail ||
+    !sender ||
+    !sender.name ||
+    !sender.email ||
+    role === undefined
+  ) {
     return res.status(400).json({
       status: 400,
       message: 'email sender and role information should not be empty!',
     });
   }
 
+  const roleName: string = roleMapping[role];
+
+  if (!roleName) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Invalid role!',
+    });
+  }
+
   const emailData: IEmailArc = {
     to: useremail,
     sender: sender,
-    role:role
+    role: roleName,
   };
 
   try {
@@ -52,7 +74,6 @@ const SendInvite = async (
   }
 };
 
-
 const saveTheUser = async (req: Request, res: Response) => {
   // get the senderemail and enduser email
   const inviteTo: string | undefined = req.query.inviteTo as string | undefined;
@@ -60,12 +81,10 @@ const saveTheUser = async (req: Request, res: Response) => {
     | string
     | undefined;
 
-    const role: string | undefined = req.query.role as
-    | string
-    | undefined;
+  const role: string | undefined = req.query.role as string;
 
   // check if empty
-  if (!inviteTo || !inviteFrom || !role) {
+  if (!inviteTo || !inviteFrom || role === undefined) {
     return res.status(400).json({
       status: 400,
       message: 'Invalid or missing invite parameters!',
@@ -80,7 +99,7 @@ const saveTheUser = async (req: Request, res: Response) => {
       managementToken,
       inviteTo,
     );
-console.log('userExists',UserExists)
+    console.log('userExists', UserExists);
     // if user not exists
     if (UserExists.length == 0) {
       const state = JSON.stringify({ inviteTo, inviteFrom, role });
@@ -102,33 +121,25 @@ console.log('userExists',UserExists)
     }
 
     //IF USER EXIST
-    const existingCustomer =await findCustomerBYEmail(UserExists[0].email)
+    const auth0ExistingUser = UserExists[0];
+    const existingCustomer = await findCustomerBYEmail(auth0ExistingUser.email);
 
     if (existingCustomer) {
-      return res.redirect(
-        `http://localhost:3000?email=${existingCustomer.email}&name=${existingCustomer.name}`,
-      );
+      return res.redirect(`http://localhost:3000`);
     }
 
-   const newCustomer= await saveCustomer(UserExists,inviteFrom,role)
-    
+    const newCustomer = await saveCustomer(auth0ExistingUser, inviteFrom, role);
 
     // SAVE THE USER ALSO
-  
-const existingAuth0User= await findUserByEmail(UserExists[0].email)
+
+    const existingAuth0User = await findUserByEmail(auth0ExistingUser.email);
     if (existingAuth0User) {
-      return res.redirect(`http://localhost:3000?email=${UserExists[0].email}&name=${UserExists[0].name}`);
+      return res.redirect(`http://localhost:3000`);
     }
-  
-    
-   const newUser=await saveUserToDB(UserExists,role)
 
-  
+    await saveUserToDB(auth0ExistingUser, role);
 
-    console.log('User saved to database:', newCustomer);
-    return res.redirect(
-      `http://localhost:3000?email=${newCustomer.email}&name=${newCustomer.name}`,
-    );
+    return res.redirect(`http://localhost:3000`);
   } catch (error) {
     console.error('Error checking if user exists:', error);
     throw error;
@@ -180,9 +191,8 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     });
   }
 
-  const { inviteTo, inviteFrom,role } = JSON.parse(state);
-  console.log('inviteto',inviteTo)
-  console.log('inviteFrom',inviteFrom)
+  const { inviteTo, inviteFrom, role } = JSON.parse(state);
+
   const managementToken = await getManagementToken();
 
   const UserFromManagementToken = await getUserFromManagementToken(
@@ -190,56 +200,34 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
     inviteTo,
   );
   const auth0User = UserFromManagementToken[0];
-  console.log('auth0User',auth0User)
-const authUserId=auth0User.user_id;
-console.log('authuserId',authUserId)
+  console.log('auth0User', auth0User);
+  const authUserId = auth0User.user_id;
+  console.log('authuserId', authUserId);
   // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
 
+  // save roles to auth0 user also
+  await addRoleToUser(managementToken, authUserId, role);
 
-// CHECK IF THE CUSTOMER ALREADY EXISTS
-const customerExists =await findCustomerBYEmail(auth0User.email)
+  // CHECK IF THE CUSTOMER ALREADY EXISTS
+  const customerExists = await findCustomerBYEmail(auth0User.email);
 
-if (customerExists) {
-  return res.redirect(
-    `http://localhost:3000?email=${customerExists.email}&name=${customerExists.name}`,
-  );
-}
-
-  const newCustomerAdded: ICustomerDocument = Customer.build({
-    name: auth0User.name,
-    email: auth0User.email,
-    created_at: auth0User.created_at,
-    username: auth0User.nickname,
-    userId: auth0User.user_id,
-    picture: auth0User.picture,
-    inviteFrom: inviteFrom,
-    role:role
-  });
-
-  await newCustomerAdded.save();
+  if (customerExists) {
+    return res.redirect(
+      `http://localhost:3000?email=${customerExists.email}&name=${customerExists.name}`,
+    );
+  }
+  await saveCustomer(auth0User, inviteFrom, role);
 
   // CHECK FOR USER EXISTS WITH THE EMAIL FIRST
-  const existingUser = await User.findOne({ email: auth0User.email });
+  const existingUser = await findUserByEmail(auth0User.email);
 
   if (existingUser) {
-    return res.redirect(`http://localhost:3000?email=${existingUser.email}&name=${existingUser.name}`);
+    return res.redirect(
+      `http://localhost:3000?email=${existingUser.email}&name=${existingUser.name}`,
+    );
   }
 
-  
-  const newUserAdded: IUserDocument = User.build({
-    name: auth0User.name,
-    email: auth0User.email,
-    created_at: auth0User.created_at,
-    username: auth0User.nickname,
-    authUserId: auth0User.user_id,
-    picture: auth0User.picture,
-    role:role
-  });
-
-  await newUserAdded.save();
-
-  // save roles to auth0 user also
-
+  await saveUserToDB(auth0User, role);
 
   return res.redirect(
     `http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`,
