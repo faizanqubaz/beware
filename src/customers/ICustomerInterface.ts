@@ -1,14 +1,15 @@
 import mongoose, { Model, Document } from 'mongoose';
 
 interface ICustomer {
-  name: String;
+  name?: String;
   email: String;
-  created_at: String;
-  username: String;
-  picture: String;
-  inviteFrom: String;
-  userId: String;
-  role: String;
+  created_at?: String;
+  username?: String;
+  picture?: String;
+  inviteFrom?: String;
+  userId?: String;
+  role?: String;
+  paints?: mongoose.Types.ObjectId[];
 }
 
 interface ICustomerDocument extends ICustomer, Document {}

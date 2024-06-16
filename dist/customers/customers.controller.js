@@ -189,17 +189,17 @@ const getCustomerByEmail = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     try {
-        const user = yield (0, findone_utils_1.findUserByEmail)(useremail);
-        if (!user) {
+        const customer = yield (0, findone_utils_1.findCustomerBYEmail)(useremail);
+        if (!customer) {
             return res.status(404).json({
                 status: 404,
-                message: 'No User found for this email',
+                message: 'No Customer found for this email',
             });
         }
         return res.status(200).json({
             status: 200,
-            message: 'User found',
-            data: user, // Include user data in the response if needed
+            message: 'Customer found',
+            data: customer, // Include user data in the response if needed
         });
     }
     catch (error) {

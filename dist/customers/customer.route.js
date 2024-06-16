@@ -12,4 +12,4 @@ router.post('/sendinvite', customers_controller_1.SendInvite);
 router.get('/confirmation-link', customers_controller_1.saveTheUser);
 router.get('/customers', customers_controller_1.getAllCustomersBySender);
 router.get('/callback', customers_controller_1.getAuthorizationCode);
-router.get('/customerbyemai', customers_controller_1.getCustomerByEmail);
+router.get('/customerbyemail', customers_controller_1.getCustomerByEmail);

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import {
   ICustomer,
   ICustomerDocument,
@@ -31,6 +31,7 @@ const customerSchema = new mongoose.Schema({
   role: {
     type: String,
   },
+  paints: [{ type: Schema.Types.ObjectId, ref: 'Paints', default: [] }],
 });
 
 customerSchema.statics.build = (attr: ICustomer) => {
