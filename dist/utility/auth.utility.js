@@ -47,7 +47,7 @@ const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, voi
         const rolesOptions = {
             method: 'GET',
             url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
-            headers: { authorization: `Bearer ${token}` }
+            headers: { authorization: `Bearer ${token}` },
         };
         const rolesResponse = yield (0, axios_1.default)(rolesOptions);
         let role = rolesResponse.data.find((role) => role.name === roleName);
@@ -57,8 +57,11 @@ const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, voi
             const createRoleOptions = {
                 method: 'POST',
                 url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
-                headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-                data: { name: roleName, description: `Role for ${roleName}` }
+                headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json',
+                },
+                data: { name: roleName, description: `Role for ${roleName}` },
             };
             const createRoleResponse = yield (0, axios_1.default)(createRoleOptions);
             role = createRoleResponse.data;
@@ -67,7 +70,7 @@ const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, voi
         const userRolesOptions = {
             method: 'GET',
             url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
-            headers: { authorization: `Bearer ${token}` }
+            headers: { authorization: `Bearer ${token}` },
         };
         const userRolesResponse = yield (0, axios_1.default)(userRolesOptions);
         const userRoles = userRolesResponse.data;
@@ -79,11 +82,11 @@ const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, voi
                 url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
                 headers: {
                     authorization: `Bearer ${token}`,
-                    'content-type': 'application/json'
+                    'content-type': 'application/json',
                 },
                 data: {
-                    roles: [role.id]
-                }
+                    roles: [role.id],
+                },
             };
             yield (0, axios_1.default)(assignRoleOptions);
         }

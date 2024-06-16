@@ -33,7 +33,7 @@ const saveCustomer = (user, inviteFrom, role) => __awaiter(void 0, void 0, void 
         picture: user.picture,
         userId: user.userId,
         inviteFrom: inviteFrom,
-        role: role
+        role: role,
     });
     return yield newCustomer.save();
 });

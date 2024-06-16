@@ -234,9 +234,45 @@ const getAuthorizationCode = async (req: Request, res: Response) => {
   );
 };
 
+// GET CUSTOMER BY EMAIL
+const getCustomerByEmail = async (req: Request, res: Response) => {
+  const { email: useremail } = req.query;
+
+  if (!useremail) {
+    return res.status(400).json({
+      status: 400,
+      message: 'userEmail query parameter is required!',
+    });
+  }
+
+  try {
+    const customer = await findCustomerBYEmail(useremail as string);
+
+    if (!customer) {
+      return res.status(404).json({
+        status: 404,
+        message: 'No Customer found for this email',
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: 'Customer found',
+      data: customer, // Include user data in the response if needed
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 500,
+      message: 'An error occurred while fetching the user',
+    });
+  }
+};
+
 export {
   SendInvite,
   saveTheUser,
   getAllCustomersBySender,
   getAuthorizationCode,
+  getCustomerByEmail,
 };

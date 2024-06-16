@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
+exports.getCustomerByEmail = exports.getAuthorizationCode = exports.getAllCustomersBySender = exports.saveTheUser = exports.SendInvite = void 0;
 const customer_model_1 = require("./customer.model");
 const sendemail_utils_1 = require("../utility/sendemail.utils");
 const auth_utility_1 = require("../utility/auth.utility");
@@ -23,7 +23,11 @@ const findone_utils_1 = require("../utility/findone.utils");
 dotenv_1.default.config();
 const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { useremail, sender, role } = req.body;
-    if (!useremail || !sender || !sender.name || !sender.email || role === undefined) {
+    if (!useremail ||
+        !sender ||
+        !sender.name ||
+        !sender.email ||
+        role === undefined) {
         return res.status(400).json({
             status: 400,
             message: 'email sender and role information should not be empty!',
@@ -39,7 +43,7 @@ const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const emailData = {
         to: useremail,
         sender: sender,
-        role: role
+        role: roleName,
     };
     try {
         const inviteDetails = yield (0, sendemail_utils_1.sendEmailToUser)(emailData);
@@ -61,19 +65,12 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // get the senderemail and enduser email
     const inviteTo = req.query.inviteTo;
     const inviteFrom = req.query.inviteFrom;
-    const role = parseInt(req.query.role, 10);
+    const role = req.query.role;
     // check if empty
-    if (!inviteTo || !inviteFrom || role === undefined || isNaN(role)) {
+    if (!inviteTo || !inviteFrom || role === undefined) {
         return res.status(400).json({
             status: 400,
             message: 'Invalid or missing invite parameters!',
-        });
-    }
-    const roleName = ICustomerInterface_1.roleMapping[role];
-    if (!roleName) {
-        return res.status(400).json({
-            status: 400,
-            message: 'Invalid role!',
         });
     }
     try {
@@ -102,13 +99,13 @@ const saveTheUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (existingCustomer) {
             return res.redirect(`http://localhost:3000`);
         }
-        const newCustomer = yield (0, findone_utils_1.saveCustomer)(auth0ExistingUser, inviteFrom, roleName);
+        const newCustomer = yield (0, findone_utils_1.saveCustomer)(auth0ExistingUser, inviteFrom, role);
         // SAVE THE USER ALSO
         const existingAuth0User = yield (0, findone_utils_1.findUserByEmail)(auth0ExistingUser.email);
         if (existingAuth0User) {
             return res.redirect(`http://localhost:3000`);
         }
-        yield (0, findone_utils_1.saveUserToDB)(auth0ExistingUser, roleName);
+        yield (0, findone_utils_1.saveUserToDB)(auth0ExistingUser, role);
         return res.redirect(`http://localhost:3000`);
     }
     catch (error) {
@@ -158,13 +155,6 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     const { inviteTo, inviteFrom, role } = JSON.parse(state);
-    const roleName = ICustomerInterface_1.roleMapping[role];
-    if (!roleName) {
-        return res.status(400).json({
-            status: 400,
-            message: 'Invalid role in state!',
-        });
-    }
     const managementToken = yield (0, auth_utility_1.getManagementToken)();
     const UserFromManagementToken = yield (0, auth_utility_1.getUserFromManagementToken)(managementToken, inviteTo);
     const auth0User = UserFromManagementToken[0];
@@ -173,7 +163,7 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
     console.log('authuserId', authUserId);
     // // SAVE THAT INTO THE CUSTOMER TABLE ALSO
     // save roles to auth0 user also
-    yield (0, auth_utility_1.addRoleToUser)(managementToken, authUserId, roleName);
+    yield (0, auth_utility_1.addRoleToUser)(managementToken, authUserId, role);
     // CHECK IF THE CUSTOMER ALREADY EXISTS
     const customerExists = yield (0, findone_utils_1.findCustomerBYEmail)(auth0User.email);
     if (customerExists) {
@@ -185,7 +175,39 @@ const getAuthorizationCode = (req, res) => __awaiter(void 0, void 0, void 0, fun
     if (existingUser) {
         return res.redirect(`http://localhost:3000?email=${existingUser.email}&name=${existingUser.name}`);
     }
-    yield (0, findone_utils_1.saveUserToDB)(auth0User, roleName);
+    yield (0, findone_utils_1.saveUserToDB)(auth0User, role);
     return res.redirect(`http://localhost:3000?email=${UserFromManagementToken[0].email}&name=${UserFromManagementToken[0].name}`);
 });
 exports.getAuthorizationCode = getAuthorizationCode;
+// GET CUSTOMER BY EMAIL
+const getCustomerByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email: useremail } = req.query;
+    if (!useremail) {
+        return res.status(400).json({
+            status: 400,
+            message: 'userEmail query parameter is required!',
+        });
+    }
+    try {
+        const user = yield (0, findone_utils_1.findUserByEmail)(useremail);
+        if (!user) {
+            return res.status(404).json({
+                status: 404,
+                message: 'No User found for this email',
+            });
+        }
+        return res.status(200).json({
+            status: 200,
+            message: 'User found',
+            data: user, // Include user data in the response if needed
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'An error occurred while fetching the user',
+        });
+    }
+});
+exports.getCustomerByEmail = getCustomerByEmail;
