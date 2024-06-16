@@ -5,6 +5,7 @@ import {
   getAllCustomersBySender,
   getAuthorizationCode,
   getCustomerById,
+  deleteCustomerById,
 } from './customers.controller';
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.get('/confirmation-link', saveTheUser);
 router.get('/customers', getAllCustomersBySender);
 router.get('/callback', getAuthorizationCode);
 router.get('/:customerId/customers', getCustomerById);
+router.delete('/:customerId', deleteCustomerById);
 
 export { router as customerRoute };
