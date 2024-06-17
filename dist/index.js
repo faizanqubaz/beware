@@ -35,8 +35,8 @@ const MONGODB_URI = process.env.MONGODB_URI ||
     'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
 // Dynamic BASE_URL based on NODE_ENV
 const BASE_URL = process.env.NODE_ENV === 'production'
-    ? process.env.PRODUCTION_BASE_URL || 'https://mycarcolor-a0030a520142.herokuapp.com/'
-    : process.env.DEVELOPMENT_BASE_URL || 'http://localhost:3000';
+    ? process.env.BASE_URL || 'https://mycarcolor-a0030a520142.herokuapp.com/'
+    : process.env.BASE_URL || 'http://localhost:3000';
 // CONNECT TO THE MONGODB
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {

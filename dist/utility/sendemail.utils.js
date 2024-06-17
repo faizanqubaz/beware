@@ -17,6 +17,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables
 dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
+console.log('BAseURL', process.env.BASE_URL);
 const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, function* () {
     const staticSubject = 'Confirmation Link';
     try {

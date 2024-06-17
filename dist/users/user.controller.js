@@ -88,13 +88,18 @@ const updateUserById = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
         }
         const user = yield user_model_1.User.findById(userId);
+        console.log('user', user);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const auth0UserId = user.auth0UserId;
+        const auth0UserId = user.authUserId;
         // Update user in Auth0
         const token = yield (0, auth_utility_1.getManagementToken)();
-        yield (0, auth_utility_1.updateAuth0User)(auth0UserId, updateData, token);
+        const updatedData = {
+            name: user.username,
+            // This will be ignored for non-Auth0 connections
+        };
+        (0, auth_utility_1.updateAuth0User)(auth0UserId, updatedData, token);
         // Update user in MongoDB
         const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, updateData, {
             new: true,
@@ -120,10 +125,10 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const auth0UserId = user.auth0UserId;
+        const auth0UserId = user.authUserId;
         // Update user's role in Auth0
         const token = yield (0, auth_utility_1.getManagementToken)();
-        yield (0, auth_utility_1.updateAuth0UserRole)(auth0UserId, role, token);
+        (0, auth_utility_1.updateAuth0UserRole)(auth0UserId, role, token);
         // Update user's role in MongoDB
         user.role = role;
         const updatedUser = yield user.save();

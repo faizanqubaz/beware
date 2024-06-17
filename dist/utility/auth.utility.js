@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAuth0UserRole = exports.updateAuth0User = exports.deleteAuth0User = exports.addRoleToUser = exports.getUserFromManagementToken = exports.getManagementToken = void 0;
+exports.updateAuth0UserRole = exports.updateAuth0User = exports.deleteAuth0User = exports.addRoleToUser = exports.getUserFromManagementToken = exports.getAuth0UserDetails = exports.getManagementToken = void 0;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables
@@ -34,6 +34,18 @@ const getManagementToken = () => __awaiter(void 0, void 0, void 0, function* () 
     return response.data.access_token;
 });
 exports.getManagementToken = getManagementToken;
+const getRoleByName = (roleName, token) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield axios_1.default.get(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const role = response.data.find((role) => role.name === roleName);
+    if (!role) {
+        throw new Error(`Role not found: ${roleName}`);
+    }
+    return role;
+});
 const getUserFromManagementToken = (accesToken, email) => __awaiter(void 0, void 0, void 0, function* () {
     const userResponse = yield axios_1.default.get(`https://dev-nl5xd2r8c23rplbr.us.auth0.com/api/v2/users-by-email?email=${encodeURIComponent(email)}`, {
         headers: { Authorization: `Bearer ${accesToken}` },
@@ -42,6 +54,21 @@ const getUserFromManagementToken = (accesToken, email) => __awaiter(void 0, void
     return users;
 });
 exports.getUserFromManagementToken = getUserFromManagementToken;
+const getAuth0UserDetails = (auth0UserId, token) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield axios_1.default.get(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error('Error fetching user details:', error);
+        throw error;
+    }
+});
+exports.getAuth0UserDetails = getAuth0UserDetails;
 const addRoleToUser = (token, userId, roleName) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Check if the role already exists
@@ -107,18 +134,57 @@ const deleteAuth0User = (auth0UserId, token) => __awaiter(void 0, void 0, void 0
 });
 exports.deleteAuth0User = deleteAuth0User;
 const updateAuth0User = (auth0UserId, data, token) => __awaiter(void 0, void 0, void 0, function* () {
-    yield axios_1.default.patch(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, data, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    try {
+        const userDetails = yield getAuth0UserDetails(auth0UserId, token);
+        console.log('userDetails', userDetails);
+        const connectionType = userDetails.identities[0].provider;
+        // Define allowed attributes for different connection types
+        const allowedAttributes = {
+            auth0: ['email', 'username', 'password', 'user_metadata', 'app_metadata'],
+            'google-oauth2': ['name', 'user_metadata', 'app_metadata'],
+            // Add other providers as needed
+        };
+        // Filter data to only include allowed attributes for the connection type
+        const filteredData = Object.keys(data)
+            .filter((key) => { var _a; return (_a = allowedAttributes[connectionType]) === null || _a === void 0 ? void 0 : _a.includes(key); })
+            .reduce((obj, key) => {
+            obj[key] = data[key];
+            return obj;
+        }, {});
+        if (Object.keys(filteredData).length === 0) {
+            throw new Error(`No attributes allowed for update for connection type ${connectionType}`);
+        }
+        // Update the user with filtered data
+        yield axios_1.default.patch(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, filteredData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        console.log('User updated successfully');
+    }
+    catch (error) {
+        console.log('error', error);
+    }
 });
 exports.updateAuth0User = updateAuth0User;
-const updateAuth0UserRole = (auth0UserId, role, token) => __awaiter(void 0, void 0, void 0, function* () {
-    yield axios_1.default.patch(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}`, { roles: [role] }, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+const updateAuth0UserRole = (auth0UserId, roleName, token) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('rolename', roleName);
+    try {
+        const role = yield getRoleByName(roleName, token);
+        console.log('role', role);
+        if (!role) {
+            throw new Error(`Role not found: ${role}`);
+        }
+        yield axios_1.default.post(`https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${auth0UserId}/roles`, { roles: [role.id] }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        console.log(`Role ${roleName} assigned to user ${auth0UserId} successfully.`);
+    }
+    catch (error) {
+        console.log(error);
+    }
 });
 exports.updateAuth0UserRole = updateAuth0UserRole;
