@@ -18,7 +18,13 @@ const routes_1 = require("./routes");
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+// Load environment variables
+if (process.env.NODE_ENV === 'production') {
+    dotenv_1.default.config({ path: '.env.production' });
+}
+else {
+    dotenv_1.default.config({ path: '.env.development' });
+}
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, body_parser_1.json)());

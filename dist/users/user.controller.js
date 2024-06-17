@@ -80,6 +80,12 @@ const updateUserById = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { userId } = req.params;
         const updateData = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid userId format',
+            });
+        }
         const user = yield user_model_1.User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -89,7 +95,9 @@ const updateUserById = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const token = yield (0, auth_utility_1.getManagementToken)();
         yield (0, auth_utility_1.updateAuth0User)(auth0UserId, updateData, token);
         // Update user in MongoDB
-        const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, updateData, { new: true });
+        const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, updateData, {
+            new: true,
+        });
         res.json({ message: 'User updated successfully', updatedUser });
     }
     catch (error) {
@@ -101,6 +109,12 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { userId } = req.params;
         const { role } = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid userId format',
+            });
+        }
         const user = yield user_model_1.User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
