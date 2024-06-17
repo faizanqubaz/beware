@@ -15,7 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEmailToUser = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+// Load environment variables
+dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
+console.log('BAseURL', process.env.BASE_URL);
 const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, function* () {
     const staticSubject = 'Confirmation Link';
     try {
@@ -30,7 +32,7 @@ const sendEmailToUser = (emailData) => __awaiter(void 0, void 0, void 0, functio
             from: process.env.SENDER_EMAIL,
             to: emailData.to,
             subject: staticSubject,
-            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:5000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}&role=${emailData.role}">link</a> for verification.</p>`,
+            html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="${process.env.BASE_URL}/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}&role=${emailData.role}">link</a> for verification.</p>`,
         };
         const data = yield transporter.sendMail(mailData);
         return data;

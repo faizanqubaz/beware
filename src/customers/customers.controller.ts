@@ -23,7 +23,9 @@ import {
   saveCustomer,
   saveUserToDB,
 } from '../utility/findone.utils';
-dotenv.config();
+
+// Load environment variables
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const SendInvite = async (
   req: Request<{}, {}, IEmailRequestBody>,
@@ -44,7 +46,7 @@ const SendInvite = async (
     });
   }
 
-  const roleName: string = roleMapping[role];
+  const roleName: string = roleMapping[0];
 
   if (!roleName) {
     return res.status(400).json({

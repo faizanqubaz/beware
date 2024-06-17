@@ -15,10 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateUserRole = exports.updateUserById = exports.deleteUserById = exports.getAllUserByEmail = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = require("./user.model");
-const dotenv_1 = __importDefault(require("dotenv"));
 const findone_utils_1 = require("../utility/findone.utils");
 const auth_utility_1 = require("../utility/auth.utility");
-dotenv_1.default.config();
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables
+dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
 const getAllUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email: useremail } = req.query;
     if (!useremail) {
@@ -80,16 +81,29 @@ const updateUserById = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { userId } = req.params;
         const updateData = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid userId format',
+            });
+        }
         const user = yield user_model_1.User.findById(userId);
+        console.log('user', user);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const auth0UserId = user.auth0UserId;
+        const auth0UserId = user.authUserId;
         // Update user in Auth0
         const token = yield (0, auth_utility_1.getManagementToken)();
-        yield (0, auth_utility_1.updateAuth0User)(auth0UserId, updateData, token);
+        const updatedData = {
+            name: user.username,
+            // This will be ignored for non-Auth0 connections
+        };
+        (0, auth_utility_1.updateAuth0User)(auth0UserId, updatedData, token);
         // Update user in MongoDB
-        const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, updateData, { new: true });
+        const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, updateData, {
+            new: true,
+        });
         res.json({ message: 'User updated successfully', updatedUser });
     }
     catch (error) {
@@ -101,14 +115,20 @@ const updateUserRole = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { userId } = req.params;
         const { role } = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Invalid userId format',
+            });
+        }
         const user = yield user_model_1.User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const auth0UserId = user.auth0UserId;
+        const auth0UserId = user.authUserId;
         // Update user's role in Auth0
         const token = yield (0, auth_utility_1.getManagementToken)();
-        yield (0, auth_utility_1.updateAuth0UserRole)(auth0UserId, role, token);
+        (0, auth_utility_1.updateAuth0UserRole)(auth0UserId, role, token);
         // Update user's role in MongoDB
         user.role = role;
         const updatedUser = yield user.save();
