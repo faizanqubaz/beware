@@ -13,10 +13,12 @@ import {
 } from '../customers/ICustomerInterface';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import dotenv from 'dotenv';
 import { IUserDocument } from '../users/Iuser.interface';
-dotenv.config();
+import dotenv from 'dotenv';
 
+// Load environment variables
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+console.log('BAseURL', process.env.BASE_URL);
 const sendEmailToUser: (
   emailData: IEmailArc,
 ) => Promise<SMTPTransport.SentMessageInfo> = async (emailData: IEmailArc) => {
@@ -35,7 +37,7 @@ const sendEmailToUser: (
       from: process.env.SENDER_EMAIL,
       to: emailData.to,
       subject: staticSubject,
-      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="http://localhost:5000/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}&role=${emailData.role}">link</a> for verification.</p>`,
+      html: `<p>You have been invited by ${emailData.sender.name} (${emailData.sender.email}). Click the confirmation Link, kindly use this <a href="${process.env.BASE_URL}/api/v2/customer/confirmation-link?inviteFrom=${emailData.sender.email}&inviteTo=${emailData.to}&role=${emailData.role}">link</a> for verification.</p>`,
     };
 
     const data: SMTPTransport.SentMessageInfo =

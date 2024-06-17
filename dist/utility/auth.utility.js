@@ -15,7 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateAuth0UserRole = exports.updateAuth0User = exports.deleteAuth0User = exports.addRoleToUser = exports.getUserFromManagementToken = exports.getManagementToken = void 0;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
+// Load environment variables
+dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
 const getManagementToken = () => __awaiter(void 0, void 0, void 0, function* () {
     const auth0Domain = process.env.MANAGEMENT_AUTH_DOMAIN;
     const clientId = process.env.MANAGEMENT_AUTH_CLIENT_ID;

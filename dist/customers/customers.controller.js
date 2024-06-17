@@ -21,7 +21,8 @@ const qs_1 = __importDefault(require("qs"));
 const ICustomerInterface_1 = require("./ICustomerInterface");
 const dotenv_1 = __importDefault(require("dotenv"));
 const findone_utils_1 = require("../utility/findone.utils");
-dotenv_1.default.config();
+// Load environment variables
+dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
 const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { useremail, sender, role } = req.body;
     if (!useremail ||

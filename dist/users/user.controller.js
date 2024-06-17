@@ -15,10 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateUserRole = exports.updateUserById = exports.deleteUserById = exports.getAllUserByEmail = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = require("./user.model");
-const dotenv_1 = __importDefault(require("dotenv"));
 const findone_utils_1 = require("../utility/findone.utils");
 const auth_utility_1 = require("../utility/auth.utility");
-dotenv_1.default.config();
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables
+dotenv_1.default.config({ path: `.env.${process.env.NODE_ENV}` });
 const getAllUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email: useremail } = req.query;
     if (!useremail) {

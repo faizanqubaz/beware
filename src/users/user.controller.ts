@@ -2,15 +2,18 @@ import express, { Response, Request } from 'express';
 import { IUserDocument } from './Iuser.interface';
 import mongoose from 'mongoose';
 import { User } from './user.model';
-import dotenv from 'dotenv';
 import { findUserByEmail } from '../utility/findone.utils';
 import {
   deleteAuth0User,
+  getAuth0UserDetails,
   getManagementToken,
   updateAuth0User,
   updateAuth0UserRole,
 } from '../utility/auth.utility';
-dotenv.config();
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const getAllUserByEmail = async (req: Request, res: Response) => {
   const { email: useremail } = req.query;
@@ -91,16 +94,22 @@ const updateUserById = async (req: Request, res: Response) => {
     }
 
     const user: any = await User.findById(userId);
-
+    console.log('user', user);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const auth0UserId = user.auth0UserId;
+    const auth0UserId = user.authUserId;
 
     // Update user in Auth0
     const token = await getManagementToken();
-    await updateAuth0User(auth0UserId, updateData, token);
+
+    const updatedData = {
+      name: user.username,
+      // This will be ignored for non-Auth0 connections
+    };
+
+    updateAuth0User(auth0UserId, updatedData, token);
 
     // Update user in MongoDB
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
@@ -131,11 +140,12 @@ const updateUserRole = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const auth0UserId = user.auth0UserId;
+    const auth0UserId = user.authUserId;
 
     // Update user's role in Auth0
     const token = await getManagementToken();
-    await updateAuth0UserRole(auth0UserId, role, token);
+
+    updateAuth0UserRole(auth0UserId, role, token);
 
     // Update user's role in MongoDB
     user.role = role;
