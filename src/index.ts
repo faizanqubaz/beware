@@ -5,7 +5,14 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 import dotenv from 'dotenv';
-dotenv.config();
+
+
+// Load environment variables
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+} else {
+  dotenv.config({ path: '.env.development' });
+}
 
 const app = express();
 app.use(express.json());
