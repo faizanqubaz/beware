@@ -4,7 +4,7 @@ interface ICustomer {
   name?: String;
   email: String;
   created_at?: String;
-  username?: String;
+  username: String;
   picture: String;
   inviteFrom?: String;
   userId?: String;
