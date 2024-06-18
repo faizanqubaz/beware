@@ -35,7 +35,7 @@ const SendInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             message: 'email sender and role information should not be empty!',
         });
     }
-    const roleName = ICustomerInterface_1.roleMapping[0];
+    const roleName = ICustomerInterface_1.roleMapping[role];
     if (!roleName) {
         return res.status(400).json({
             status: 400,
