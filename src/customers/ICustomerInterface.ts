@@ -5,10 +5,10 @@ interface ICustomer {
   email: String;
   created_at?: String;
   username?: String;
-  picture?: String;
+  picture: String;
   inviteFrom?: String;
   userId?: String;
-  role?: String;
+  role: String;
   paints?: mongoose.Types.ObjectId[];
 }
 
