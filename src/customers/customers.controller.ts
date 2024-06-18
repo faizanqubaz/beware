@@ -46,7 +46,7 @@ const SendInvite = async (
     });
   }
 
-  const roleName: string = roleMapping[0];
+  const roleName: string = roleMapping[role];
 
   if (!roleName) {
     return res.status(400).json({
