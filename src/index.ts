@@ -27,7 +27,7 @@ const MONGODB_URI =
 // Dynamic BASE_URL based on NODE_ENV
 const BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? process.env.BASE_URL || 'https://mycarcolor-a0030a520142.herokuapp.com/'
+    ? process.env.BASE_URL || 'https://mycarcolor-8348d7d97064.herokuapp.com/'
     : process.env.BASE_URL || 'http://localhost:3000';
 
 // CONNECT TO THE MONGODB
