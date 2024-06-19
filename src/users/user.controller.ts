@@ -157,4 +157,22 @@ const updateUserRole = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllUserByEmail, deleteUserById, updateUserById, updateUserRole };
+const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find();
+    res.status(200).json({
+      message: 'retrive all users from DB',
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error });
+  }
+};
+
+export {
+  getAllUserByEmail,
+  deleteUserById,
+  updateUserById,
+  updateUserRole,
+  getAllUsers,
+};

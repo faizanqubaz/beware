@@ -3,10 +3,10 @@ import mongoose, { Model, Document } from 'mongoose';
 interface IUser {
   name: String;
   email: String;
-  username: String;
-  created_at: String;
-  authUserId: String;
-  picture: String;
+  username?: String;
+  created_at?: String;
+  authUserId?: String;
+  picture?: String;
   role: String;
 }
 
