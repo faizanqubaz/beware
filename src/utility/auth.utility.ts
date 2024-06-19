@@ -236,12 +236,40 @@ const updateAuth0UserRole = async (
   }
 };
 
+const getAuth0Users = async (token: string) => {
+  const response = await axios.get(
+    `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+const getUserRolesCronJob = async (token: string, userId: string) => {
+  const response = await axios.get(
+    `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  return response.data;
+};
+
 export {
   getManagementToken,
+  getUserRolesCronJob,
   getAuth0UserDetails,
   getUserFromManagementToken,
   addRoleToUser,
   deleteAuth0User,
   updateAuth0User,
   updateAuth0UserRole,
+  getAuth0Users,
 };

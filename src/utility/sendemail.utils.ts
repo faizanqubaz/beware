@@ -18,7 +18,7 @@ import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
-console.log('BAseURL', process.env.BASE_URL);
+
 const sendEmailToUser: (
   emailData: IEmailArc,
 ) => Promise<SMTPTransport.SentMessageInfo> = async (emailData: IEmailArc) => {

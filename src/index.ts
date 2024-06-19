@@ -2,9 +2,18 @@ import express from 'express';
 import { json } from 'body-parser';
 import { mainRouter } from './routes';
 import mongoose from 'mongoose';
+import cron from 'node-cron';
 import cors from 'cors';
 
 import dotenv from 'dotenv';
+import {
+  getAuth0Users,
+  getManagementToken,
+  getUserRolesCronJob,
+} from './utility/auth.utility';
+import { findUserByEmail, saveUserToDB } from './utility/findone.utils';
+import { IUser } from './users/Iuser.interface';
+import { User } from './users/user.model';
 
 // Load environment variables
 if (process.env.NODE_ENV === 'production') {
@@ -48,3 +57,57 @@ const start = async () => {
 };
 
 start();
+
+const checkAndSaveUsers = async () => {
+  try {
+    const token = await getManagementToken();
+    const users = await getAuth0Users(token);
+
+    for (const user of users) {
+      const roles = await getUserRolesCronJob(token, user.user_id);
+
+      const existingUser = await findUserByAuth0Email(user.email);
+      if (!existingUser) {
+        const role = roles.length > 0 ? roles[0].name : 'enduser';
+        await saveUserUsingCronJob({
+          email: user.email,
+          name: user.name,
+          username: user.username,
+          created_at: user.created_at,
+          authUserId: user.user_id,
+          picture: user.picture,
+          role, // Store as a string
+        });
+        console.log(`User ${user.email} saved to MongoDB`);
+      } else {
+        console.log(`User ${user.email} already exists in MongoDB`);
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching or saving users:', error);
+  }
+};
+
+const findUserByAuth0Email = async (email: string): Promise<IUser | null> => {
+  return await User.findOne({ email });
+};
+
+const saveUserUsingCronJob = async (
+  user: Partial<IUser>,
+): Promise<IUser | null> => {
+  try {
+    const newUser = new User(user);
+    return await newUser.save();
+  } catch (error: any) {
+    if (error.code === 11000) {
+      // Duplicate key error
+      console.log(`Duplicate email error: ${user.email} already exists.`);
+      return null;
+    } else {
+      throw error;
+    }
+  }
+};
+
+// Schedule the cron job to run every 10 seconds
+cron.schedule('*/10 * * * * *', checkAndSaveUsers);
