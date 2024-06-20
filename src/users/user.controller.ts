@@ -1,14 +1,19 @@
 import express, { Response, Request } from 'express';
 import { IUserDocument } from './Iuser.interface';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { User } from './user.model';
 import { findUserByEmail } from '../utility/findone.utils';
 import {
+  addRoleToUser,
+  auth0CustomLogin,
+  auth0Signup,
   deleteAuth0User,
   getAuth0UserDetails,
   getManagementToken,
   updateAuth0User,
   updateAuth0UserRole,
+  assignRoleToUser,
 } from '../utility/auth.utility';
 import dotenv from 'dotenv';
 
@@ -169,10 +174,41 @@ const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const customSignup = async (req: Request, res: Response) => {
+  try {
+    const { email, password, username } = req.body;
+    console.log('email', email);
+    console.log('password', password);
+    const user = await auth0Signup(email, password, username);
+    console.log('user', user);
+    const userId = user._id;
+    const managementToken = await getManagementToken();
+    const signupRole = 'enduser';
+    await assignRoleToUser(managementToken, userId, signupRole);
+
+    res.send('Signup successful');
+  } catch (error: any) {
+    res.status(400).send(`Signup error: ${error.message}`);
+  }
+};
+
+const customLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const userInfo = await auth0CustomLogin(email, password);
+    const token = jwt.sign(userInfo, 'test');
+    res.json({ token });
+  } catch (error: any) {
+    res.status(400).send(`Login error: ${error.message}`);
+  }
+};
+
 export {
   getAllUserByEmail,
   deleteUserById,
   updateUserById,
   updateUserRole,
   getAllUsers,
+  customSignup,
+  customLogin,
 };

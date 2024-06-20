@@ -5,6 +5,8 @@ import {
   updateUserById,
   updateUserRole,
   getAllUsers,
+  customSignup,
+  customLogin,
 } from './user.controller';
 const router = express.Router();
 
@@ -13,5 +15,7 @@ router.delete('/:userId', deleteUserById);
 router.put('/:userId', updateUserById);
 router.put('/:userId/roles', updateUserRole);
 router.get('/users', getAllUsers);
+router.post('/signup', customSignup);
+router.post('/login', customLogin);
 
 export { router as userRoute };
