@@ -1,5 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import dotenv from 'dotenv';
+import { connection } from 'mongoose';
 
 // Load environment variables
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
@@ -84,21 +85,24 @@ const addRoleToUser = async (
   token: string,
   userId: string,
   roleName: string,
-) => {
+): Promise<void> => {
   try {
     // Check if the role already exists
-    const rolesOptions = {
+    const rolesOptions: AxiosRequestConfig = {
       method: 'GET',
       url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
       headers: { authorization: `Bearer ${token}` },
     };
 
     const rolesResponse = await axios(rolesOptions);
-    let role = rolesResponse.data.find((role: any) => role.name === roleName);
+    let role: any | undefined = rolesResponse.data.find(
+      (role: any) => role.name === roleName,
+    );
     console.log('role', role);
+
     // If the role doesn't exist, create it
     if (!role) {
-      const createRoleOptions = {
+      const createRoleOptions: AxiosRequestConfig = {
         method: 'POST',
         url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
         headers: {
@@ -111,8 +115,8 @@ const addRoleToUser = async (
       const createRoleResponse = await axios(createRoleOptions);
       role = createRoleResponse.data;
     }
-    // // Check if the user already has the role
-    const userRolesOptions = {
+
+    const userRolesOptions: AxiosRequestConfig = {
       method: 'GET',
       url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
       headers: { authorization: `Bearer ${token}` },
@@ -124,7 +128,7 @@ const addRoleToUser = async (
 
     if (!hasRole) {
       // Assign the role to the user
-      const assignRoleOptions = {
+      const assignRoleOptions: AxiosRequestConfig = {
         method: 'POST',
         url: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${userId}/roles`,
         headers: {
@@ -262,6 +266,123 @@ const getUserRolesCronJob = async (token: string, userId: string) => {
   return response.data;
 };
 
+const auth0Signup = async (
+  email: string,
+  password: string,
+  username: string,
+): Promise<any> => {
+  try {
+    const response = await axios.post(
+      `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/dbconnections/signup`,
+      {
+        client_id: process.env.MANAGEMENT_AUTH_CLIENT_ID,
+        email,
+        password,
+        connection: 'Username-Password-Authentication',
+        username,
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    console.log('ERROR', error);
+    throw new Error(`Signup error: ${error}`);
+  }
+};
+
+const auth0CustomLogin = async (email: string, password: string) => {
+  try {
+    const response = await axios.post(
+      `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/oauth/token`,
+      {
+        grant_type: 'password',
+        username: email,
+        password: password,
+        audience: `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/`,
+        client_id: process.env.MANAGEMENT_AUTH_CLIENT_ID,
+        client_secret: process.env.MANAGEMENT_AUTH_CLIENT_SECRET,
+        connection: 'Username-Password-Authentication',
+        scope: 'openid',
+      },
+    );
+
+    const { access_token } = response.data;
+    const userInfo = await axios.get(
+      `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/userinfo`,
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      },
+    );
+
+    return userInfo.data;
+  } catch (error: any) {
+    console.log('erroe', error);
+    throw new Error(`Login error: ${error.message}`);
+  }
+};
+
+const assignRoleToUser = async (
+  accessToken: string,
+  userId: string,
+  roleName: string,
+) => {
+  try {
+    // Step 1: Check if the role already exists
+    const rolesResponse = await axios.get(
+      `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+    console.log('roleRes', rolesResponse);
+    let role = rolesResponse.data.find((r: any) => r.name === roleName);
+
+    // Step 2: If role doesn't exist, create it
+    if (!role) {
+      const createRoleResponse = await axios.post(
+        `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/roles`,
+        {
+          name: roleName,
+          description: `Role for ${roleName}`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      role = createRoleResponse.data;
+    }
+    console.log('role', role);
+
+    // Step 3: Assign the role to the user
+    const assignRoleResponse = await axios.post(
+      `https://${process.env.MANAGEMENT_AUTH_DOMAIN}/api/v2/users/${encodeURIComponent(`auth0|${userId}`)}/roles`,
+      {
+        roles: [role.id],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    console.log('Roles assigned successfully:', assignRoleResponse.data);
+    return assignRoleResponse.data;
+  } catch (error: any) {
+    console.error(
+      'Error assigning roles:',
+      error.response?.data ?? error.message,
+    );
+    throw error;
+  }
+};
+
 export {
   getManagementToken,
   getUserRolesCronJob,
@@ -272,4 +393,7 @@ export {
   updateAuth0User,
   updateAuth0UserRole,
   getAuth0Users,
+  auth0Signup,
+  auth0CustomLogin,
+  assignRoleToUser,
 };
