@@ -18,6 +18,14 @@ const routes_1 = require("./routes");
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+// import {
+//   getAuth0Users,
+//   getManagementToken,
+//   getUserRolesCronJob,
+// } from './utility/auth.utility';
+// import { findUserByEmail, saveUserToDB } from './utility/findone.utils';
+// import { IUser } from './users/Iuser.interface';
+// import { User } from './users/user.model';
 // Load environment variables
 if (process.env.NODE_ENV === 'production') {
     dotenv_1.default.config({ path: '.env.production' });
@@ -35,7 +43,7 @@ const MONGODB_URI = process.env.MONGODB_URI ||
     'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
 // Dynamic BASE_URL based on NODE_ENV
 const BASE_URL = process.env.NODE_ENV === 'production'
-    ? process.env.BASE_URL || 'https://mycarcolor-a0030a520142.herokuapp.com/'
+    ? process.env.BASE_URL || 'https://mycarcolor-8348d7d97064.herokuapp.com/'
     : process.env.BASE_URL || 'http://localhost:3000';
 // CONNECT TO THE MONGODB
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -54,3 +62,51 @@ const start = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 start();
+// const checkAndSaveUsers = async () => {
+//   try {
+//     const token = await getManagementToken();
+//     const users = await getAuth0Users(token);
+//     for (const user of users) {
+//       const roles = await getUserRolesCronJob(token, user.user_id);
+//       const existingUser = await findUserByAuth0Email(user.email);
+//       if (!existingUser) {
+//         const role = roles.length > 0 ? roles[0].name : 'enduser';
+//         await saveUserUsingCronJob({
+//           email: user.email,
+//           name: user.name,
+//           username: user.username,
+//           created_at: user.created_at,
+//           authUserId: user.user_id,
+//           picture: user.picture,
+//           role, // Store as a string
+//         });
+//         console.log(`User ${user.email} saved to MongoDB`);
+//       } else {
+//         console.log(`User ${user.email} already exists in MongoDB`);
+//       }
+//     }
+//   } catch (error) {
+//     console.error('Error fetching or saving users:', error);
+//   }
+// };
+// const findUserByAuth0Email = async (email: string): Promise<IUser | null> => {
+//   return await User.findOne({ email });
+// };
+// const saveUserUsingCronJob = async (
+//   user: Partial<IUser>,
+// ): Promise<IUser | null> => {
+//   try {
+//     const newUser = new User(user);
+//     return await newUser.save();
+//   } catch (error: any) {
+//     if (error.code === 11000) {
+//       // Duplicate key error
+//       console.log(`Duplicate email error: ${user.email} already exists.`);
+//       return null;
+//     } else {
+//       throw error;
+//     }
+//   }
+// };
+// // Schedule the cron job to run every 10 seconds
+// cron.schedule('*/10 * * * * *', checkAndSaveUsers);

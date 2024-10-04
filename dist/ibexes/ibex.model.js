@@ -23,21 +23,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Paint = void 0;
+exports.Ibex = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const PaintSchema = new mongoose_1.Schema({
-    customerId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Customer',
-        required: true,
-    },
-    colorName: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    price: { type: Number, required: true },
-    colorCode: { type: String, required: true },
-    yearRange: { type: String, required: true },
-    brand: { type: String, required: true },
-    size: { type: String, required: true },
+const IbexSchema = new mongoose_1.Schema({
+    ibexname: { type: String, required: true },
+    description: { type: String, required: true },
+    ibexrate: { type: Number, required: true }, // Assuming rate is a number
+    guideName: { type: String, required: true },
+    ibexsize: { type: String, required: true },
+    priceOld: { type: String, required: true },
+    newPrice: { type: String, required: true },
+    huntername: { type: String, required: true },
+    hunterlocation: { type: String, required: true },
+    latitude: { type: String, required: true },
+    longitude: { type: String, required: true },
+    huntdate: { type: Date, required: true },
+    huntType: { type: String, required: true },
+    ibexphotos: [{ type: String, required: true }], // Array of photo URLs
+    guidephotos: [{ type: String, required: true }], // Array of guide photo URLs
 }, { timestamps: true });
-const Paint = mongoose_1.default.model('Paints', PaintSchema);
-exports.Paint = Paint;
+const Ibex = mongoose_1.default.model('Ibex', IbexSchema);
+exports.Ibex = Ibex;

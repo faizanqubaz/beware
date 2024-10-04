@@ -1,19 +1,14 @@
 import mongoose, { Model, Document } from 'mongoose';
 
-interface IUser {
-  name: String;
-  email: String;
-  username?: String;
-  created_at?: String;
-  authUserId?: String;
-  picture?: String;
-  role: String;
+interface IAdmin {
+ email:string
+ password:string
 }
 
-interface IUserDocument extends IUser, Document {}
+interface IAdminDocument extends IAdmin, Document {}
 
-interface ICustomerModel extends Model<IUserDocument> {
-  build(attr: IUser): IUserDocument;
+interface ICustomerModel extends Model<IAdminDocument> {
+  build(attr: IAdmin): IAdminDocument;
 }
 
 interface IEmailArc {
@@ -33,4 +28,4 @@ interface IEmailRequestBody {
   };
 }
 
-export { IUser, IUserDocument, ICustomerModel, IEmailArc, IEmailRequestBody };
+export { IAdmin, IAdminDocument, ICustomerModel, IEmailArc, IEmailRequestBody };
