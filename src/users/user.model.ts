@@ -15,6 +15,6 @@ userSchema.statics.build = (attr: IAdmin) => {
   return new Admin(attr);
 };
 
-const Admin = mongoose.model<IAdminDocument, ICustomerModel>('Admin', userSchema);
+const Admin = mongoose.model<IAdminDocument, ICustomerModel>('AdminPassu', userSchema);
 
 export { Admin };

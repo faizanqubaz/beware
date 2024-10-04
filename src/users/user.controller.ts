@@ -210,11 +210,14 @@ const AuthenticateAdmin = async (req: Request, res: Response): Promise<Response>
   try {
     // Check if the email exists in the database
     const admin = await Admin.findOne({ email });
-
+  console.log('admin',admin)
     if (!admin) {
-      return res.status(404).json({ message: 'Invalid email or password' });
+      return res.status(404).json({ message: 'email not found' });
     }
 
+    
+
+    
     // Compare the provided password with the stored hashed password
     const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
@@ -225,6 +228,8 @@ const AuthenticateAdmin = async (req: Request, res: Response): Promise<Response>
     const token = jwt.sign({ id: admin._id }, 'mysecretpassword', {
       expiresIn: '1h', // Adjust token expiration as needed
     });
+
+
 
     // Return success with user data (without password) and token
     return res.status(200).json({
