@@ -6,6 +6,8 @@ import {
   sendMail,
   getAllIbex
 } from './ibexs.controller';
+
+
 const router = express.Router();
 
 // POST route for saving Ibex data with image upload
