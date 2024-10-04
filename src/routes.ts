@@ -5,6 +5,6 @@ import { IbexRoute } from './ibexes/ibex.route';
 const router: Router = express.Router();
 
 router.use('/ibex', IbexRoute);
-// router.use('/login',adminRoute)
+router.use('/login',userRoute)
 
 export { router as mainRouter };
