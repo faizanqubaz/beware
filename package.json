@@ -5,13 +5,14 @@
   "proxy": "https://zakhari-a63a222c7c96.herokuapp.com",
   "scripts": {
     "build": "tsc",
+    "heroku-postbuild": "npm install --legacy-peer-deps && npm run build",
     "prestart": "npm run build",
     "start": "node dist/index.js",
     "start:dev": "cross-env NODE_ENV=development ts-node-dev src/index.ts",
     "start:prod": "cross-env NODE_ENV=production node dist/index.js",
     "preserve": "npm run build",
     "serve": "ts-node-dev src/index.ts",
-    "heroku-postbuild": "npm install --legacy-peer-deps && npm run build",
+  
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,css,md}'"
   },
   "keywords": [],
