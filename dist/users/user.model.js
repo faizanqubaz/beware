@@ -16,5 +16,5 @@ const userSchema = new mongoose_1.default.Schema({
 userSchema.statics.build = (attr) => {
     return new Admin(attr);
 };
-const Admin = mongoose_1.default.model('Admin', userSchema);
+const Admin = mongoose_1.default.model('AdminPassu', userSchema);
 exports.Admin = Admin;

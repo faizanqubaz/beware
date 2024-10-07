@@ -184,8 +184,9 @@ const AuthenticateAdmin = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         // Check if the email exists in the database
         const admin = yield user_model_1.Admin.findOne({ email });
+        console.log('admin', admin);
         if (!admin) {
-            return res.status(404).json({ message: 'Invalid email or password' });
+            return res.status(404).json({ message: 'email not found' });
         }
         // Compare the provided password with the stored hashed password
         const isPasswordValid = yield bcryptjs_1.default.compare(password, admin.password);

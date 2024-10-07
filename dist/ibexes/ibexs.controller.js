@@ -164,13 +164,15 @@ const getAllIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const { hunttype } = req.query;
         // Fetch all Ibex entries or filter by hunttype
         const ibexList = yield ibex_model_1.Ibex.find({ huntType: hunttype });
+        console.log('req,', req.protocol);
         // Map through the ibex entries to append full image URIs
         const baseUrl = `${req.protocol}://${req.get('host')}`; // Construct base URL
         const updatedIbexList = ibexList.map(ibex => {
-            const updatedIbex = Object.assign(Object.assign({}, ibex.toObject()), { ibexphotos: ibex.ibexphotos.map(photo => `${baseUrl}/${photo}`), guidephotos: ibex.guidephotos.map(photo => `${baseUrl}/${photo}`) // Prepend base URL to guide images
+            const updatedIbex = Object.assign(Object.assign({}, ibex.toObject()), { ibexphotos: ibex.ibexphotos.map(photo => `${baseUrl}/${photo.replace(/\\/g, '/')}`), guidephotos: ibex.guidephotos.map(photo => `${baseUrl}/${photo.replace(/\\/g, '/')}`) // Fix backslashes
              });
             return updatedIbex;
         });
+        console.log('ibexpj', updatedIbexList[0].ibexphotos);
         // Return the list of Ibex entries with full image URIs
         res.status(200).json({
             message: 'Ibex entries retrieved successfully',

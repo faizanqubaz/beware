@@ -3,6 +3,15 @@ import { Ibex } from './ibex.model';
 import path from 'path';
 import multer, { FileFilterCallback } from 'multer';
 import nodemailer from 'nodemailer';
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs'; // For file system operations
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: 'dyds5ol3y',
+  api_key: '214534318241163',
+  api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
+});
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -33,6 +42,16 @@ const upload = multer({
   { name: 'guidephotos', maxCount: 5 }  // Handle multiple guide images
 ]);
 
+const uploadToCloudinary = async (filePath: string) => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath);
+    return result.secure_url; // Return the Cloudinary URL
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Failed to upload to Cloudinary');
+  }
+};
+
 // Save new Ibex to the database
 const saveIbex = async (req: Request, res: Response) => {
   upload(req, res, async (err: any) => {
@@ -46,7 +65,20 @@ const saveIbex = async (req: Request, res: Response) => {
 
       const ibexphotos = (req.files as any)?.ibexphotos.map((file: Express.Multer.File) => file.path) || [];
       const guidephotos = (req.files as any)?.guidephotos.map((file: Express.Multer.File) => file.path) || [];
+ // Upload each image to Cloudinary and get URLs
+ const ibexphotosCloudinary = await Promise.all(
+  ibexphotos.map(async (filePath: string) => {
+    const cloudinaryUrl = await uploadToCloudinary(filePath);
+    return cloudinaryUrl; // Return Cloudinary URL
+  })
+);
 
+const guidephotosCloudinary = await Promise.all(
+  guidephotos.map(async (filePath: string) => {
+    const cloudinaryUrl = await uploadToCloudinary(filePath);
+    return cloudinaryUrl; // Return Cloudinary URL
+  })
+);
       const ibex = new Ibex({
         ibexname,
         description,
@@ -58,8 +90,8 @@ const saveIbex = async (req: Request, res: Response) => {
         newPrice,
         huntername,
         huntdate,
-        ibexphotos,
-        guidephotos,
+        ibexphotos:ibexphotosCloudinary,
+        guidephotos:guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "populartype"
@@ -70,6 +102,10 @@ const saveIbex = async (req: Request, res: Response) => {
       res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
     } catch (error: any) {
       res.status(500).json({ message: 'Error saving Ibex', error: error.message });
+    }
+    finally {
+      // Optionally remove the local files after uploading to Cloudinary
+      
     }
   });
 };
@@ -86,7 +122,20 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
 
       const ibexphotos = (req.files as any)?.ibexphotos.map((file: Express.Multer.File) => file.path) || [];
       const guidephotos = (req.files as any)?.guidephotos.map((file: Express.Multer.File) => file.path) || [];
+ // Upload each image to Cloudinary and get URLs
+ const ibexphotosCloudinary = await Promise.all(
+  ibexphotos.map(async (filePath: string) => {
+    const cloudinaryUrl = await uploadToCloudinary(filePath);
+    return cloudinaryUrl; // Return Cloudinary URL
+  })
+);
 
+const guidephotosCloudinary = await Promise.all(
+  guidephotos.map(async (filePath: string) => {
+    const cloudinaryUrl = await uploadToCloudinary(filePath);
+    return cloudinaryUrl; // Return Cloudinary URL
+  })
+);
       const ibex = new Ibex({
         ibexname,
         description,
@@ -98,8 +147,8 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
         newPrice,
         huntername,
         huntdate,
-        ibexphotos,
-        guidephotos,
+        ibexphotos:ibexphotosCloudinary,
+        guidephotos:guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "topoffertype"
@@ -126,7 +175,19 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
 
       const ibexphotos = (req.files as any)?.ibexphotos.map((file: Express.Multer.File) => file.path) || [];
       const guidephotos = (req.files as any)?.guidephotos.map((file: Express.Multer.File) => file.path) || [];
-
+      const ibexphotosCloudinary = await Promise.all(
+        ibexphotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
+      
+      const guidephotosCloudinary = await Promise.all(
+        guidephotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
       const ibex = new Ibex({
         ibexname,
         description,
@@ -138,8 +199,8 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
         newPrice,
         huntername,
         huntdate,
-        ibexphotos,
-        guidephotos,
+        ibexphotos:ibexphotosCloudinary,
+        guidephotos:guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "newhunttype"
@@ -162,20 +223,13 @@ const getAllIbex = async (req: Request, res: Response) => {
     const ibexList = await Ibex.find({ huntType: hunttype });
 
     // Map through the ibex entries to append full image URIs
-    const baseUrl = `${req.protocol}://${req.get('host')}`; // Construct base URL
-    const updatedIbexList = ibexList.map(ibex => {
-      const updatedIbex = {
-        ...ibex.toObject(), // Convert Mongoose document to plain object
-        ibexphotos: ibex.ibexphotos.map(photo => `${baseUrl}/${photo}`), // Prepend base URL to ibex images
-        guidephotos: ibex.guidephotos.map(photo => `${baseUrl}/${photo}`)  // Prepend base URL to guide images
-      };
-      return updatedIbex;
-    });
+ 
 
+  
     // Return the list of Ibex entries with full image URIs
     res.status(200).json({
       message: 'Ibex entries retrieved successfully',
-      data: updatedIbexList
+      data: ibexList
     });
   } catch (error: any) {
     console.error('Error fetching Ibex entries:', error);

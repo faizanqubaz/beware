@@ -1,6 +1,7 @@
 import express from 'express';
 import { json } from 'body-parser';
 import { mainRouter } from './routes';
+import path from 'path'
 import mongoose from 'mongoose';
 import cron from 'node-cron';
 import cors from 'cors';
@@ -25,7 +26,18 @@ if (process.env.NODE_ENV === 'production') {
 const app = express();
 app.use(express.json());
 app.use(json());
-app.use(cors());
+app.use('/uploads', express.static('uploads'));
+
+
+const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', 'http://localhost:3000'];
+
+
+const corsOptions ={
+    origin:'http://localhost:3000', 
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200
+}
+app.use(cors(corsOptions));
 app.use('/api/v2', mainRouter);
 
 const PORT = process.env.PORT || 3000;
@@ -39,6 +51,9 @@ const BASE_URL =
     ? process.env.BASE_URL || 'https://mycarcolor-8348d7d97064.herokuapp.com/'
     : process.env.BASE_URL || 'http://localhost:3000';
 
+    app.get('/test', (req, res) => {
+      res.send('<img src="/uploads/1727503182526-355697014-team3.jpg" alt="Sample Image" />');
+    });
 // CONNECT TO THE MONGODB
 const start = async () => {
   try {

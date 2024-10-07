@@ -36,7 +36,14 @@ else {
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, body_parser_1.json)());
-app.use((0, cors_1.default)());
+app.use('/uploads', express_1.default.static('uploads'));
+const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', 'http://localhost:3000'];
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    credentials: true, //access-control-allow-credentials:true
+    optionSuccessStatus: 200
+};
+app.use((0, cors_1.default)(corsOptions));
 app.use('/api/v2', routes_1.mainRouter);
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI ||
@@ -45,6 +52,9 @@ const MONGODB_URI = process.env.MONGODB_URI ||
 const BASE_URL = process.env.NODE_ENV === 'production'
     ? process.env.BASE_URL || 'https://mycarcolor-8348d7d97064.herokuapp.com/'
     : process.env.BASE_URL || 'http://localhost:3000';
+app.get('/test', (req, res) => {
+    res.send('<img src="/uploads/1727503182526-355697014-team3.jpg" alt="Sample Image" />');
+});
 // CONNECT TO THE MONGODB
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
