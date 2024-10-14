@@ -12,7 +12,6 @@
     "start:prod": "cross-env NODE_ENV=production node dist/index.js",
     "preserve": "npm run build",
     "serve": "ts-node-dev src/index.ts",
-  
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,css,md}'"
   },
   "keywords": [],
@@ -32,7 +31,7 @@
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
-    "cloudinary": "^2.5.0",
+    "cloudinary": "^1.21.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
