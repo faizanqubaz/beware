@@ -34,7 +34,7 @@ const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7e
 
 // Configure CORS
 const corsOptions = {
-  origin: 'https://passu-conservency.vercel.app/', // Replace with your actual Vercel URL
+  origin: 'https://passu-conservency.vercel.app', // Replace with your actual Vercel URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   optionsSuccessStatus: 204
