@@ -32,11 +32,14 @@ app.use('/uploads', express.static('uploads'));
 const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', 'http://localhost:3000'];
 
 
-const corsOptions ={
-    origin:'https://passu-conservency.vercel.app/', 
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
-}
+// Configure CORS
+const corsOptions = {
+  origin: 'https://zakhari-a63a222c7c96.herokuapp.com', // Replace with your actual Vercel URL
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  optionsSuccessStatus: 204
+};
+
 app.use(cors(corsOptions));
 app.use('/api/v2', mainRouter);
 
