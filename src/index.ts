@@ -33,7 +33,7 @@ const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7e
 
 
 const corsOptions ={
-    origin:'http://localhost:3000', 
+    origin:'https://passu-conservency.vercel.app/', 
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
 }
