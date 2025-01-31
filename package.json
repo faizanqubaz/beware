@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "proxy": "https://zakhari-a63a222c7c96.herokuapp.com",
+  "engines": {
+    "node": "20.14.0"
+  },
   "scripts": {
     "build": "tsc",
     "heroku-postbuild": "npm install --legacy-peer-deps && npm run build",
