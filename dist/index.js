@@ -37,10 +37,10 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, body_parser_1.json)());
 app.use('/uploads', express_1.default.static('uploads'));
-const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', 'http://localhost:3000'];
+const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', ''];
 // Configure CORS
 const corsOptions = {
-    origin: 'https://passu-conservency.vercel.app', // Replace with your actual Vercel URL
+    origin: ['https://passu-conservency.vercel.app', 'http://localhost:3000'], // Replace with your actual Vercel URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     optionsSuccessStatus: 204

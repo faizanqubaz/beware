@@ -196,7 +196,7 @@ import { Admin } from './user.model';
 // const customLogin = async (req: Request, res: Response) => {
 //   try {
 //     const { email, password } = req.body;
-//     const userInfo = await auth0CustomLogin(email, password);
+//     const userInfo = await Admin.;
 //     const token = jwt.sign(userInfo, 'test');
 //     res.json({ token });
 //   } catch (error: any) {
