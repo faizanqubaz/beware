@@ -29,12 +29,12 @@ app.use(json());
 app.use('/uploads', express.static('uploads'));
 
 
-const allowedOrigins = ['https://passu-conservency-csbodzukv-faizans-projects-7efc1ab6.vercel.app', ''];
+const allowedOrigins = ['https://beware-seven.vercel.app/', ''];
 
 
 // Configure CORS
 const corsOptions = {
-  origin: ['https://passu-conservency.vercel.app','http://localhost:3000'], // Replace with your actual Vercel URL
+  origin: ['https://beware-seven.vercel.app/','http://localhost:3000'], // Replace with your actual Vercel URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   optionsSuccessStatus: 204
@@ -51,7 +51,7 @@ const MONGODB_URI =
 // Dynamic BASE_URL based on NODE_ENV
 const BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? process.env.BASE_URL || 'https://mycarcolor-8348d7d97064.herokuapp.com/'
+    ? process.env.BASE_URL || 'https://beware-seven.vercel.app/'
     : process.env.BASE_URL || 'http://localhost:3000';
 
     app.get('/test', (req, res) => {
