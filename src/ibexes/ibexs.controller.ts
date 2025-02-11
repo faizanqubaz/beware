@@ -5,6 +5,7 @@ import multer, { FileFilterCallback } from 'multer';
 import nodemailer from 'nodemailer';
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs'; // For file system operations
+import { AnyNsRecord } from 'dns';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -12,6 +13,17 @@ cloudinary.config({
   api_key: '214534318241163',
   api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
 });
+
+const getallcloudimages = async(req:any,res:any) =>{
+  try {
+    const result = await cloudinary.api.resources({ type: "upload", resource_type: "image" });
+    res.json(result.resources);
+  } catch (error) {
+   console.log(error)
+  }
+}
+ 
+
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -22,13 +34,14 @@ const storage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, `${uniqueSuffix}-${file.originalname}`);
 
-    
+
   }
 });
 
 // Define accepted file types (e.g., JPEG, PNG)
 const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: (error: (Error | null), acceptFile?: boolean) => void) => {
   if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+    console.log('this is running dude',file.mimetype)
     cb(null, true); // No error, accept file
   } else {
     cb(new Error('Unsupported file type'), false); // Return error for unsupported file type
@@ -37,7 +50,7 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: (error:
 // Initialize multer upload
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
   fileFilter: fileFilter
 }).fields([
   { name: 'ibexphotos', maxCount: 5 }, // Handle multiple ibex images
@@ -56,31 +69,32 @@ const uploadToCloudinary = async (filePath: string) => {
 
 // Save new Ibex to the database
 const saveIbex = async (req: Request, res: Response) => {
+  console.log('iam runnng')
   upload(req, res, async (err: any) => {
     if (err) {
       console.log('err', err);
       return res.status(500).json({ message: 'Error uploading files', error: err.message });
     }
-
+console.log('not an issue with multer')
     try {
       const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
 
       const ibexphotos = (req.files as any)?.ibexphotos.map((file: Express.Multer.File) => file.path) || [];
       const guidephotos = (req.files as any)?.guidephotos.map((file: Express.Multer.File) => file.path) || [];
- // Upload each image to Cloudinary and get URLs
- const ibexphotosCloudinary = await Promise.all(
-  ibexphotos.map(async (filePath: string) => {
-    const cloudinaryUrl = await uploadToCloudinary(filePath);
-    return cloudinaryUrl; // Return Cloudinary URL
-  })
-);
+      // Upload each image to Cloudinary and get URLs
+      const ibexphotosCloudinary = await Promise.all(
+        ibexphotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
 
-const guidephotosCloudinary = await Promise.all(
-  guidephotos.map(async (filePath: string) => {
-    const cloudinaryUrl = await uploadToCloudinary(filePath);
-    return cloudinaryUrl; // Return Cloudinary URL
-  })
-);
+      const guidephotosCloudinary = await Promise.all(
+        guidephotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
       const ibex = new Ibex({
         ibexname,
         description,
@@ -92,8 +106,8 @@ const guidephotosCloudinary = await Promise.all(
         newPrice,
         huntername,
         huntdate,
-        ibexphotos:ibexphotosCloudinary,
-        guidephotos:guidephotosCloudinary,
+        ibexphotos: ibexphotosCloudinary,
+        guidephotos: guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "populartype"
@@ -107,7 +121,7 @@ const guidephotosCloudinary = await Promise.all(
     }
     finally {
       // Optionally remove the local files after uploading to Cloudinary
-      
+
     }
   });
 };
@@ -124,20 +138,20 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
 
       const ibexphotos = (req.files as any)?.ibexphotos.map((file: Express.Multer.File) => file.path) || [];
       const guidephotos = (req.files as any)?.guidephotos.map((file: Express.Multer.File) => file.path) || [];
- // Upload each image to Cloudinary and get URLs
- const ibexphotosCloudinary = await Promise.all(
-  ibexphotos.map(async (filePath: string) => {
-    const cloudinaryUrl = await uploadToCloudinary(filePath);
-    return cloudinaryUrl; // Return Cloudinary URL
-  })
-);
+      // Upload each image to Cloudinary and get URLs
+      const ibexphotosCloudinary = await Promise.all(
+        ibexphotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
 
-const guidephotosCloudinary = await Promise.all(
-  guidephotos.map(async (filePath: string) => {
-    const cloudinaryUrl = await uploadToCloudinary(filePath);
-    return cloudinaryUrl; // Return Cloudinary URL
-  })
-);
+      const guidephotosCloudinary = await Promise.all(
+        guidephotos.map(async (filePath: string) => {
+          const cloudinaryUrl = await uploadToCloudinary(filePath);
+          return cloudinaryUrl; // Return Cloudinary URL
+        })
+      );
       const ibex = new Ibex({
         ibexname,
         description,
@@ -149,8 +163,8 @@ const guidephotosCloudinary = await Promise.all(
         newPrice,
         huntername,
         huntdate,
-        ibexphotos:ibexphotosCloudinary,
-        guidephotos:guidephotosCloudinary,
+        ibexphotos: ibexphotosCloudinary,
+        guidephotos: guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "topoffertype"
@@ -183,7 +197,7 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
           return cloudinaryUrl; // Return Cloudinary URL
         })
       );
-      
+
       const guidephotosCloudinary = await Promise.all(
         guidephotos.map(async (filePath: string) => {
           const cloudinaryUrl = await uploadToCloudinary(filePath);
@@ -201,8 +215,8 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
         newPrice,
         huntername,
         huntdate,
-        ibexphotos:ibexphotosCloudinary,
-        guidephotos:guidephotosCloudinary,
+        ibexphotos: ibexphotosCloudinary,
+        guidephotos: guidephotosCloudinary,
         priceOld,
         hunterlocation,
         huntType: "newhunttype"
@@ -225,9 +239,9 @@ const getAllIbex = async (req: Request, res: Response) => {
     const ibexList = await Ibex.find({ huntType: hunttype });
 
     // Map through the ibex entries to append full image URIs
- 
 
-  
+
+
     // Return the list of Ibex entries with full image URIs
     res.status(200).json({
       message: 'Ibex entries retrieved successfully',
@@ -267,4 +281,20 @@ const sendMail = async (req: Request, res: Response) => {
   }
 };
 
-export { saveIbex, saveNewHuntIbex, saveTopOfferIbex, getAllIbex, sendMail };
+const deleteallcloud = async(req:any,res:any) => {
+  try {
+    const { publicId } = req.params;
+
+    // Call Cloudinary to delete the image
+    const result = await cloudinary.uploader.destroy(publicId);
+
+    if (result.result === "not found") {
+      return res.status(404).json({ message: "Image not found." });
+    }
+
+    res.status(200).json({ message: "Image deleted successfully.", result });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+}
+export { saveIbex, saveNewHuntIbex, saveTopOfferIbex, getAllIbex, sendMail,getallcloudimages,deleteallcloud };

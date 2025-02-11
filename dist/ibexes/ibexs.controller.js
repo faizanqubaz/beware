@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMail = exports.getAllIbex = exports.saveTopOfferIbex = exports.saveNewHuntIbex = exports.saveIbex = void 0;
+exports.deleteallcloud = exports.getallcloudimages = exports.sendMail = exports.getAllIbex = exports.saveTopOfferIbex = exports.saveNewHuntIbex = exports.saveIbex = void 0;
 const ibex_model_1 = require("./ibex.model");
 const multer_1 = __importDefault(require("multer"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
@@ -23,6 +23,16 @@ cloudinary_1.v2.config({
     api_key: '214534318241163',
     api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
 });
+const getallcloudimages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield cloudinary_1.v2.api.resources({ type: "upload", resource_type: "image" });
+        res.json(result.resources);
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.getallcloudimages = getallcloudimages;
 // Configure multer for image uploads
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
@@ -36,6 +46,7 @@ const storage = multer_1.default.diskStorage({
 // Define accepted file types (e.g., JPEG, PNG)
 const fileFilter = (req, file, cb) => {
     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        console.log('this is running dude', file.mimetype);
         cb(null, true); // No error, accept file
     }
     else {
@@ -45,7 +56,7 @@ const fileFilter = (req, file, cb) => {
 // Initialize multer upload
 const upload = (0, multer_1.default)({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 5 }, // 5MB file size limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
     fileFilter: fileFilter
 }).fields([
     { name: 'ibexphotos', maxCount: 5 }, // Handle multiple ibex images
@@ -63,12 +74,14 @@ const uploadToCloudinary = (filePath) => __awaiter(void 0, void 0, void 0, funct
 });
 // Save new Ibex to the database
 const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('iam runnng');
     upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b;
         if (err) {
             console.log('err', err);
             return res.status(500).json({ message: 'Error uploading files', error: err.message });
         }
+        console.log('not an issue with multer');
         try {
             const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
             const ibexphotos = ((_a = req.files) === null || _a === void 0 ? void 0 : _a.ibexphotos.map((file) => file.path)) || [];
@@ -249,3 +262,18 @@ const sendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.sendMail = sendMail;
+const deleteallcloud = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { publicId } = req.params;
+        // Call Cloudinary to delete the image
+        const result = yield cloudinary_1.v2.uploader.destroy(publicId);
+        if (result.result === "not found") {
+            return res.status(404).json({ message: "Image not found." });
+        }
+        res.status(200).json({ message: "Image deleted successfully.", result });
+    }
+    catch (error) {
+        res.status(500).json({ error: error });
+    }
+});
+exports.deleteallcloud = deleteallcloud;

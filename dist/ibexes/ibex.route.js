@@ -13,5 +13,7 @@ router.post('/popular', ibexs_controller_1.saveIbex);
 router.post('/newhunt', ibexs_controller_1.saveNewHuntIbex);
 router.post('/topoffer', ibexs_controller_1.saveTopOfferIbex);
 router.post('/contactus', ibexs_controller_1.sendMail);
+router.get('/cloud', ibexs_controller_1.getallcloudimages);
+router.delete('/deleteall/:publicId', ibexs_controller_1.deleteallcloud);
 // GET route for fetching all Ibex entries
 router.get('/', ibexs_controller_1.getAllIbex);

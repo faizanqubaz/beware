@@ -4,7 +4,9 @@ import {
   saveNewHuntIbex,
   saveTopOfferIbex,
   sendMail,
-  getAllIbex
+  getAllIbex,
+  getallcloudimages,
+deleteallcloud
 } from './ibexs.controller';
 
 
@@ -15,7 +17,8 @@ router.post('/popular', saveIbex);
 router.post('/newhunt', saveNewHuntIbex);
 router.post('/topoffer', saveTopOfferIbex);
 router.post('/contactus',sendMail)
-
+router.get('/cloud',getallcloudimages)
+router.delete('/deleteall/:publicId',deleteallcloud)
 // GET route for fetching all Ibex entries
 router.get('/', getAllIbex); 
 
