@@ -12,17 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteallcloud = exports.getallcloudimages = exports.sendMail = exports.getAllIbex = exports.saveTopOfferIbex = exports.saveNewHuntIbex = exports.saveIbex = void 0;
+exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = void 0;
 const ibex_model_1 = require("./ibex.model");
-const multer_1 = __importDefault(require("multer"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const cloudinary_1 = require("cloudinary");
 // Configure Cloudinary
-cloudinary_1.v2.config({
-    cloud_name: 'dyds5ol3y',
-    api_key: '214534318241163',
-    api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
-});
+// cloudinary.config({
+//   cloud_name: 'dyds5ol3y',
+//   api_key: '214534318241163',
+//   api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
+// });
+// const storage = multer.memoryStorage(); // Store images in memory before uploading to Cloudinary
+// const uploads = multer({ storage });
 const getallcloudimages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield cloudinary_1.v2.api.resources({ type: "upload", resource_type: "image" });
@@ -34,187 +35,186 @@ const getallcloudimages = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getallcloudimages = getallcloudimages;
 // Configure multer for image uploads
-const storage = multer_1.default.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // The folder where images will be stored
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `${uniqueSuffix}-${file.originalname}`);
-    }
-});
+// const storage = new CloudinaryStorage({
+//   cloudinary: cloudinary,
+//   params: {
+//     folder: "uploads", // Save to 'uploads' folder in Cloudinary
+//     format: async () => "png", // Convert all uploads to PNG format
+//     public_id: (req:any, file:any) => file.originalname.split(".")[0], // Use filename as public_id
+//   } as Record<string, unknown>, // 👈 Explicit type assertion to avoid TS error
+// });
+// Multer middleware
+// const uploadss = multer({ storage });
 // Define accepted file types (e.g., JPEG, PNG)
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-        console.log('this is running dude', file.mimetype);
-        cb(null, true); // No error, accept file
-    }
-    else {
-        cb(new Error('Unsupported file type'), false); // Return error for unsupported file type
-    }
-};
+// const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: (error: (Error | null), acceptFile?: boolean) => void) => {
+//   if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+//     console.log('this is running dude',file.mimetype)
+//     cb(null, true); // No error, accept file
+//   } else {
+//     cb(new Error('Unsupported file type'), false); // Return error for unsupported file type
+//   }
+// };
 // Initialize multer upload
-const upload = (0, multer_1.default)({
-    storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
-    fileFilter: fileFilter
-}).fields([
-    { name: 'ibexphotos', maxCount: 5 }, // Handle multiple ibex images
-    { name: 'guidephotos', maxCount: 5 } // Handle multiple guide images
-]);
-const uploadToCloudinary = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const result = yield cloudinary_1.v2.uploader.upload(filePath);
-        return result.secure_url; // Return the Cloudinary URL
-    }
-    catch (error) {
-        console.error('Cloudinary upload error:', error);
-        throw new Error('Failed to upload to Cloudinary');
-    }
-});
+// const upload = multer({
+//   storage: storage,
+//   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
+//   fileFilter: fileFilter
+// }).fields([
+//   { name: 'ibexphotos', maxCount: 5 }, // Handle multiple ibex images
+//   { name: 'guidephotos', maxCount: 5 }  // Handle multiple guide images
+// ]);
+// const uploadToCloudinary = async (filePath: string) => {
+//   try {
+//     const result = await cloudinary.uploader.upload(filePath);
+//     return result.secure_url; // Return the Cloudinary URL
+//   } catch (error) {
+//     console.error('Cloudinary upload error:', error);
+//     throw new Error('Failed to upload to Cloudinary');
+//   }
+// };
 // Save new Ibex to the database
 const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('iam runnng');
-    upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b;
-        if (err) {
-            console.log('err', err);
-            return res.status(500).json({ message: 'Error uploading files', error: err.message });
-        }
-        console.log('not an issue with multer');
-        try {
-            const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
-            const ibexphotos = ((_a = req.files) === null || _a === void 0 ? void 0 : _a.ibexphotos.map((file) => file.path)) || [];
-            const guidephotos = ((_b = req.files) === null || _b === void 0 ? void 0 : _b.guidephotos.map((file) => file.path)) || [];
-            // Upload each image to Cloudinary and get URLs
-            const ibexphotosCloudinary = yield Promise.all(ibexphotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const guidephotosCloudinary = yield Promise.all(guidephotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const ibex = new ibex_model_1.Ibex({
-                ibexname,
-                description,
-                ibexrate,
-                guideName,
-                latitude,
-                longitude, // Save latitude and longitude instead of location
-                ibexsize,
-                newPrice,
-                huntername,
-                huntdate,
-                ibexphotos: ibexphotosCloudinary,
-                guidephotos: guidephotosCloudinary,
-                priceOld,
-                hunterlocation,
-                huntType: "populartype"
-            });
-            const savedIbex = yield ibex.save();
-            console.log('saved', savedIbex);
-            res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error saving Ibex', error: error.message });
-        }
-        finally {
-            // Optionally remove the local files after uploading to Cloudinary
-        }
-    }));
+    try {
+        const ibexphotos = req.files["ibexphotos"] || [];
+        const guidephotos = req.files["guidephotos"] || [];
+        // Extract Cloudinary URLs
+        const ibexphotosCloudinary = ibexphotos.map((file) => file.path);
+        const guidephotosCloudinary = guidephotos.map((file) => file.path);
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation, } = req.body;
+        // Save to MongoDB
+        const ibex = new ibex_model_1.Ibex({
+            ibexname,
+            description,
+            ibexrate,
+            guideName,
+            latitude,
+            longitude,
+            ibexsize,
+            newPrice,
+            huntername,
+            huntdate,
+            ibexphotos: ibexphotosCloudinary,
+            guidephotos: guidephotosCloudinary,
+            priceOld,
+            hunterlocation,
+            huntType: "populartype",
+        });
+        const savedIbex = yield ibex.save();
+        return res.status(201).json({
+            message: "Popular hunt created successfully!",
+            ibex: savedIbex,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error processing files", error: error.message });
+    }
+    // upload.fields([{ name: "ibexphotos", maxCount: 5 }, { name: "guidephotos", maxCount: 5 }])(req, res, async (err: any) => {
+    //   if (err) {
+    //     return res.status(500).json({ message: "Error uploading files", error: err.message });
+    //   }
+    //   console.log("req.files BEFORE processing:", req.files); // ✅ Debugging Line
+    //   try {
+    //     const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+    //     // ✅ Check if files are correctly populated
+    //     const ibexphotos = (req.files as any)?.ibexphotos || [];
+    //     const guidephotos = (req.files as any)?.guidephotos || [];
+    //     console.log("ibexphotos Raw:", ibexphotos);
+    //     console.log("guidephotos Raw:", guidephotos);
+    //     // Extract Cloudinary URLs
+    //     const ibexphotosCloudinary = ibexphotos.map((file: any) => file.path); 
+    //     const guidephotosCloudinary = guidephotos.map((file: any) => file.path); 
+    //     console.log("ibexphotos Cloudinary:", ibexphotosCloudinary);
+    //     console.log("guidephotos Cloudinary:", guidephotosCloudinary);
+    //     res.status(200).json({ message: "Files uploaded successfully", ibexphotosCloudinary, guidephotosCloudinary });
+    //   } catch (error: any) {
+    //     res.status(500).json({ message: "Error saving Ibex", error: error.message });
+    //   }
+    // });
+    // const ibex = new Ibex({
+    //   ibexname,
+    //   description,
+    //   ibexrate,
+    //   guideName,
+    //   latitude,
+    //   longitude,
+    //   ibexsize,
+    //   newPrice,
+    //   huntername,
+    //   huntdate,
+    //   ibexphotos: ibexphotosCloudinary,
+    //   guidephotos: guidephotosCloudinary,
+    //   priceOld,
+    //   hunterlocation,
+    //   huntType: "populartype"
+    // });
+    // const savedIbex = await ibex.save();
+    // res.status(201).json({ message: "Ibex created successfully", data: savedIbex });
 });
 exports.saveIbex = saveIbex;
 const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
-        var _c, _d;
-        if (err) {
-            console.log('err', err);
-            return res.status(500).json({ message: 'Error uploading files', error: err.message });
-        }
-        try {
-            const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
-            const ibexphotos = ((_c = req.files) === null || _c === void 0 ? void 0 : _c.ibexphotos.map((file) => file.path)) || [];
-            const guidephotos = ((_d = req.files) === null || _d === void 0 ? void 0 : _d.guidephotos.map((file) => file.path)) || [];
-            // Upload each image to Cloudinary and get URLs
-            const ibexphotosCloudinary = yield Promise.all(ibexphotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const guidephotosCloudinary = yield Promise.all(guidephotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const ibex = new ibex_model_1.Ibex({
-                ibexname,
-                description,
-                ibexrate,
-                guideName,
-                latitude,
-                longitude, // Save latitude and longitude instead of location
-                ibexsize,
-                newPrice,
-                huntername,
-                huntdate,
-                ibexphotos: ibexphotosCloudinary,
-                guidephotos: guidephotosCloudinary,
-                priceOld,
-                hunterlocation,
-                huntType: "topoffertype"
-            });
-            const savedIbex = yield ibex.save();
-            console.log('saved', savedIbex);
-            res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error saving Ibex', error: error.message });
-        }
-    }));
+    try {
+        const ibextopofferphotos = req.files["ibexphotos"] || [];
+        const guidetopofferphotos = req.files["guidephotos"] || [];
+        // Extract Cloudinary URLs
+        const ibexTopOfferphotosCloudinary = ibextopofferphotos.map((file) => file.path);
+        const guideTopOfferphotosCloudinary = guidetopofferphotos.map((file) => file.path);
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        const ibex = new ibex_model_1.Ibex({
+            ibexname,
+            description,
+            ibexrate,
+            guideName,
+            latitude,
+            longitude, // Save latitude and longitude instead of location
+            ibexsize,
+            newPrice,
+            huntername,
+            huntdate,
+            ibexphotos: ibexTopOfferphotosCloudinary,
+            guidephotos: guideTopOfferphotosCloudinary,
+            priceOld,
+            hunterlocation,
+            huntType: "topoffertype"
+        });
+        const savedIbex = yield ibex.save();
+        res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error saving Ibex', error: error.message });
+    }
 });
 exports.saveTopOfferIbex = saveTopOfferIbex;
 const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
-        var _e, _f;
-        if (err) {
-            console.log('err', err);
-            return res.status(500).json({ message: 'Error uploading files', error: err.message });
-        }
-        try {
-            const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
-            const ibexphotos = ((_e = req.files) === null || _e === void 0 ? void 0 : _e.ibexphotos.map((file) => file.path)) || [];
-            const guidephotos = ((_f = req.files) === null || _f === void 0 ? void 0 : _f.guidephotos.map((file) => file.path)) || [];
-            const ibexphotosCloudinary = yield Promise.all(ibexphotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const guidephotosCloudinary = yield Promise.all(guidephotos.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
-                const cloudinaryUrl = yield uploadToCloudinary(filePath);
-                return cloudinaryUrl; // Return Cloudinary URL
-            })));
-            const ibex = new ibex_model_1.Ibex({
-                ibexname,
-                description,
-                ibexrate,
-                guideName,
-                latitude,
-                longitude, // Save latitude and longitude instead of location
-                ibexsize,
-                newPrice,
-                huntername,
-                huntdate,
-                ibexphotos: ibexphotosCloudinary,
-                guidephotos: guidephotosCloudinary,
-                priceOld,
-                hunterlocation,
-                huntType: "newhunttype"
-            });
-            const savedIbex = yield ibex.save();
-            res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error saving Ibex', error: error.message });
-        }
-    }));
+    try {
+        const ibexNewHuntphotos = req.files["ibexphotos"] || [];
+        const guideNewHuntphotos = req.files["guidephotos"] || [];
+        // Extract Cloudinary URLs
+        const ibexNewHuntphotosCloudinary = ibexNewHuntphotos.map((file) => file.path);
+        const guideNewHuntphotosCloudinary = guideNewHuntphotos.map((file) => file.path);
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        const ibex = new ibex_model_1.Ibex({
+            ibexname,
+            description,
+            ibexrate,
+            guideName,
+            latitude,
+            longitude, // Save latitude and longitude instead of location
+            ibexsize,
+            newPrice,
+            huntername,
+            huntdate,
+            ibexphotos: ibexNewHuntphotosCloudinary,
+            guidephotos: guideNewHuntphotosCloudinary,
+            priceOld,
+            hunterlocation,
+            huntType: "newhunttype"
+        });
+        const savedIbex = yield ibex.save();
+        res.status(201).json({ message: 'Ibex created successfully', data: savedIbex });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error saving Ibex', error: error.message });
+    }
 });
 exports.saveNewHuntIbex = saveNewHuntIbex;
 // Get all Ibex entries

@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'production') {
 const app = express();
 app.use(express.json());
 app.use(json());
-app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static('uploads'));
 
 
 const allowedOrigins = ['https://beware-seven.vercel.app/', ''];
