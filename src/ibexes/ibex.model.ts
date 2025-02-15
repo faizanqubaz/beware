@@ -1,9 +1,17 @@
-import mongoose, { Schema } from 'mongoose';
-import { IIbex } from './ibex.interface';
+import mongoose, { Schema, Document } from "mongoose";
 
-const IbexSchema: Schema = new Schema(
-  {
-    ibexname: { type: String, required: true },
+interface IbexPhoto {
+  cloudinary_url: string;
+  cloudinary_id: string;
+}
+
+export interface IIbex extends Document {
+  ibexname: string;
+  ibexphotos: IbexPhoto[];
+  guidephotos: IbexPhoto[];
+}
+
+const IbexSchema: Schema = new Schema({
     description: { type: String, required: true },
     ibexrate: { type: Number, required: true }, // Assuming rate is a number
     guideName: { type: String, required: true },
@@ -16,12 +24,19 @@ const IbexSchema: Schema = new Schema(
     longitude: { type: String, required: true },
     huntdate: { type: Date, required: true },
     huntType:{type:String,required:true},
-    ibexphotos: [{ type: String, required: true }], // Array of photo URLs
-    guidephotos: [{ type: String, required: true }], // Array of guide photo URLs
-  },
-  { timestamps: true }
-);
+  ibexname: { type: String, required: true },
+  ibexphotos: [
+    {
+      cloudinary_url: { type: String, required: true },
+      cloudinary_id: { type: String, required: true },
+    },
+  ],
+  guidephotos: [
+    {
+      cloudinary_url: { type: String, required: true },
+      cloudinary_id: { type: String, required: true },
+    },
+  ],
+});
 
-const Ibex = mongoose.model<IIbex>('Ibex', IbexSchema);
-
-export { Ibex, IIbex };
+export const Ibex = mongoose.model<IIbex>("Ibex", IbexSchema);

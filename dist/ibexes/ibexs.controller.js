@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = void 0;
+exports.updateCard = exports.deleteCard = exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = void 0;
 const ibex_model_1 = require("./ibex.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const cloudinary_1 = require("cloudinary");
@@ -34,6 +34,40 @@ const getallcloudimages = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getallcloudimages = getallcloudimages;
+const deleteCard = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        console.log('id', id);
+        // Find the Ibex document
+        const ibex = yield ibex_model_1.Ibex.findById(id);
+        console.log('ibexfound', ibex);
+        if (!ibex)
+            return res.status(404).json({ message: "Ibex not found" });
+        // Ensure that ibexphotos and guidephotos are arrays of objects
+        if (Array.isArray(ibex.ibexphotos)) {
+            for (const photo of ibex.ibexphotos) {
+                if (photo.cloudinary_id) {
+                    yield cloudinary_1.v2.uploader.destroy(photo.cloudinary_id);
+                }
+            }
+        }
+        if (Array.isArray(ibex.guidephotos)) {
+            for (const photo of ibex.guidephotos) {
+                if (photo.cloudinary_id) {
+                    yield cloudinary_1.v2.uploader.destroy(photo.cloudinary_id);
+                }
+            }
+        }
+        // Delete the document from MongoDB
+        yield ibex_model_1.Ibex.findByIdAndDelete(id);
+        console.log('juu');
+        res.status(200).json({ message: "Ibex deleted successfully" });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error deleting Ibex", error: error });
+    }
+});
+exports.deleteCard = deleteCard;
 // Configure multer for image uploads
 // const storage = new CloudinaryStorage({
 //   cloudinary: cloudinary,
@@ -77,10 +111,24 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const ibexphotos = req.files["ibexphotos"] || [];
         const guidephotos = req.files["guidephotos"] || [];
-        // Extract Cloudinary URLs
-        const ibexphotosCloudinary = ibexphotos.map((file) => file.path);
-        const guidephotosCloudinary = guidephotos.map((file) => file.path);
-        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation, } = req.body;
+        // Extract Cloudinary URLs and Public IDs
+        const ibexphotosData = ibexphotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
+        const guidephotosData = guidephotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
+        console.log("Guide Photo IDs:", guidephotosData);
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
+        priceOld, hunterlocation, } = req.body;
+        // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
+        const [day, month, year] = huntdate.split('/'); // Split the string
+        const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
+        if (isNaN(formattedHuntDate.getTime())) {
+            return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
+        }
         // Save to MongoDB
         const ibex = new ibex_model_1.Ibex({
             ibexname,
@@ -92,9 +140,9 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             ibexsize,
             newPrice,
             huntername,
-            huntdate,
-            ibexphotos: ibexphotosCloudinary,
-            guidephotos: guidephotosCloudinary,
+            huntdate: formattedHuntDate, // Use the properly formatted date
+            ibexphotos: ibexphotosData, // Array with cloudinary_url & cloudinary_id
+            guidephotos: guidephotosData, // Array with cloudinary_url & cloudinary_id
             priceOld,
             hunterlocation,
             huntType: "populartype",
@@ -108,57 +156,28 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         res.status(500).json({ message: "Error processing files", error: error.message });
     }
-    // upload.fields([{ name: "ibexphotos", maxCount: 5 }, { name: "guidephotos", maxCount: 5 }])(req, res, async (err: any) => {
-    //   if (err) {
-    //     return res.status(500).json({ message: "Error uploading files", error: err.message });
-    //   }
-    //   console.log("req.files BEFORE processing:", req.files); // ✅ Debugging Line
-    //   try {
-    //     const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
-    //     // ✅ Check if files are correctly populated
-    //     const ibexphotos = (req.files as any)?.ibexphotos || [];
-    //     const guidephotos = (req.files as any)?.guidephotos || [];
-    //     console.log("ibexphotos Raw:", ibexphotos);
-    //     console.log("guidephotos Raw:", guidephotos);
-    //     // Extract Cloudinary URLs
-    //     const ibexphotosCloudinary = ibexphotos.map((file: any) => file.path); 
-    //     const guidephotosCloudinary = guidephotos.map((file: any) => file.path); 
-    //     console.log("ibexphotos Cloudinary:", ibexphotosCloudinary);
-    //     console.log("guidephotos Cloudinary:", guidephotosCloudinary);
-    //     res.status(200).json({ message: "Files uploaded successfully", ibexphotosCloudinary, guidephotosCloudinary });
-    //   } catch (error: any) {
-    //     res.status(500).json({ message: "Error saving Ibex", error: error.message });
-    //   }
-    // });
-    // const ibex = new Ibex({
-    //   ibexname,
-    //   description,
-    //   ibexrate,
-    //   guideName,
-    //   latitude,
-    //   longitude,
-    //   ibexsize,
-    //   newPrice,
-    //   huntername,
-    //   huntdate,
-    //   ibexphotos: ibexphotosCloudinary,
-    //   guidephotos: guidephotosCloudinary,
-    //   priceOld,
-    //   hunterlocation,
-    //   huntType: "populartype"
-    // });
-    // const savedIbex = await ibex.save();
-    // res.status(201).json({ message: "Ibex created successfully", data: savedIbex });
 });
 exports.saveIbex = saveIbex;
 const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const ibextopofferphotos = req.files["ibexphotos"] || [];
         const guidetopofferphotos = req.files["guidephotos"] || [];
-        // Extract Cloudinary URLs
-        const ibexTopOfferphotosCloudinary = ibextopofferphotos.map((file) => file.path);
-        const guideTopOfferphotosCloudinary = guidetopofferphotos.map((file) => file.path);
+        // Extract Cloudinary URLs and Public IDs
+        const ibexphotosData = ibextopofferphotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
+        const guidephotosData = guidetopofferphotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
+        const [day, month, year] = huntdate.split('/'); // Split the string
+        const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
+        if (isNaN(formattedHuntDate.getTime())) {
+            return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
+        }
         const ibex = new ibex_model_1.Ibex({
             ibexname,
             description,
@@ -169,9 +188,9 @@ const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, functio
             ibexsize,
             newPrice,
             huntername,
-            huntdate,
-            ibexphotos: ibexTopOfferphotosCloudinary,
-            guidephotos: guideTopOfferphotosCloudinary,
+            huntdate: formattedHuntDate,
+            ibexphotos: ibexphotosData,
+            guidephotos: guidephotosData,
             priceOld,
             hunterlocation,
             huntType: "topoffertype"
@@ -188,10 +207,23 @@ const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const ibexNewHuntphotos = req.files["ibexphotos"] || [];
         const guideNewHuntphotos = req.files["guidephotos"] || [];
-        // Extract Cloudinary URLs
-        const ibexNewHuntphotosCloudinary = ibexNewHuntphotos.map((file) => file.path);
-        const guideNewHuntphotosCloudinary = guideNewHuntphotos.map((file) => file.path);
+        console.log('ibexphotos', ibexNewHuntphotos);
+        // Extract Cloudinary URLs and Public IDs
+        const ibexphotosData = ibexNewHuntphotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
+        const guidephotosData = guideNewHuntphotos.map((file) => ({
+            cloudinary_url: file.path, // Cloudinary URL
+            cloudinary_id: file.filename, // Cloudinary Public ID
+        }));
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
+        const [day, month, year] = huntdate.split('/'); // Split the string
+        const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
+        if (isNaN(formattedHuntDate.getTime())) {
+            return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
+        }
         const ibex = new ibex_model_1.Ibex({
             ibexname,
             description,
@@ -202,9 +234,9 @@ const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function
             ibexsize,
             newPrice,
             huntername,
-            huntdate,
-            ibexphotos: ibexNewHuntphotosCloudinary,
-            guidephotos: guideNewHuntphotosCloudinary,
+            huntdate: formattedHuntDate,
+            ibexphotos: ibexphotosData,
+            guidephotos: guidephotosData,
             priceOld,
             hunterlocation,
             huntType: "newhunttype"
@@ -221,13 +253,13 @@ exports.saveNewHuntIbex = saveNewHuntIbex;
 const getAllIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { hunttype } = req.query;
-        // Fetch all Ibex entries or filter by hunttype
-        const ibexList = yield ibex_model_1.Ibex.find({ huntType: hunttype });
-        // Map through the ibex entries to append full image URIs
-        // Return the list of Ibex entries with full image URIs
+        // Fetch Ibex entries based on hunttype (if provided)
+        const ibexList = hunttype
+            ? yield ibex_model_1.Ibex.find({ huntType: hunttype }) // Filter by hunttype
+            : yield ibex_model_1.Ibex.find(); // Fetch all if hunttype is not provided
         res.status(200).json({
             message: 'Ibex entries retrieved successfully',
-            data: ibexList
+            data: ibexList,
         });
     }
     catch (error) {
@@ -262,6 +294,46 @@ const sendMail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.sendMail = sendMail;
+const updateCard = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const updatedData = {
+            description: req.body.description,
+            ibexrate: req.body.ibexrate,
+            guideName: req.body.guideName,
+            ibexsize: req.body.ibexsize,
+            priceOld: req.body.priceOld,
+            newPrice: req.body.newPrice,
+            huntername: req.body.huntername,
+            hunterlocation: req.body.hunterlocation,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude,
+            huntdate: req.body.huntdate,
+            huntType: req.body.huntType,
+            ibexname: req.body.ibexname,
+        };
+        // Handle new photos if provided
+        if (req.files && Array.isArray(req.files)) {
+            const uploadedPhotos = yield Promise.all(req.files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
+                const result = yield cloudinary_1.v2.uploader.upload(file.path);
+                return {
+                    cloudinary_url: result.secure_url,
+                    cloudinary_id: result.public_id,
+                };
+            })));
+            updatedData.ibexphotos = uploadedPhotos; // Now TypeScript recognizes this property
+        }
+        const updatedIbex = yield ibex_model_1.Ibex.findByIdAndUpdate(id, updatedData, { new: true });
+        if (!updatedIbex) {
+            return res.status(404).json({ message: "Ibex not found" });
+        }
+        res.status(200).json({ message: "Ibex card updated successfully", updatedIbex });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error updating Ibex card", error: error });
+    }
+});
+exports.updateCard = updateCard;
 const deleteallcloud = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { publicId } = req.params;

@@ -26,7 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Ibex = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const IbexSchema = new mongoose_1.Schema({
-    ibexname: { type: String, required: true },
     description: { type: String, required: true },
     ibexrate: { type: Number, required: true }, // Assuming rate is a number
     guideName: { type: String, required: true },
@@ -39,8 +38,18 @@ const IbexSchema = new mongoose_1.Schema({
     longitude: { type: String, required: true },
     huntdate: { type: Date, required: true },
     huntType: { type: String, required: true },
-    ibexphotos: [{ type: String, required: true }], // Array of photo URLs
-    guidephotos: [{ type: String, required: true }], // Array of guide photo URLs
-}, { timestamps: true });
-const Ibex = mongoose_1.default.model('Ibex', IbexSchema);
-exports.Ibex = Ibex;
+    ibexname: { type: String, required: true },
+    ibexphotos: [
+        {
+            cloudinary_url: { type: String, required: true },
+            cloudinary_id: { type: String, required: true },
+        },
+    ],
+    guidephotos: [
+        {
+            cloudinary_url: { type: String, required: true },
+            cloudinary_id: { type: String, required: true },
+        },
+    ],
+});
+exports.Ibex = mongoose_1.default.model("Ibex", IbexSchema);

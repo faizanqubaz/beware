@@ -14,6 +14,8 @@ router.post('/popular', cloudnary_utils_1.upload.fields([{ name: "ibexphotos", m
 router.post('/newhunt', cloudnary_utils_1.upload.fields([{ name: "ibexphotos", maxCount: 5 }, { name: "guidephotos", maxCount: 5 }]), ibexs_controller_1.saveNewHuntIbex);
 router.post('/topoffer', cloudnary_utils_1.upload.fields([{ name: "ibexphotos", maxCount: 5 }, { name: "guidephotos", maxCount: 5 }]), ibexs_controller_1.saveTopOfferIbex);
 router.post('/contactus', ibexs_controller_1.sendMail);
+router.delete('/deletecard/:id', ibexs_controller_1.deleteCard);
+router.put('/updatecard/:id', ibexs_controller_1.updateCard);
 router.get('/cloud', ibexs_controller_1.getallcloudimages);
 router.delete('/deleteall/:publicId', ibexs_controller_1.deleteallcloud);
 // GET route for fetching all Ibex entries

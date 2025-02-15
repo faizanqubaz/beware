@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const body_parser_1 = require("body-parser");
 const routes_1 = require("./routes");
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
@@ -34,8 +33,8 @@ else {
     dotenv_1.default.config({ path: '.env.development' });
 }
 const app = (0, express_1.default)();
-app.use(express_1.default.json());
-app.use((0, body_parser_1.json)());
+app.use(express_1.default.json({ limit: "500mb" })); // Increase limit for JSON
+app.use(express_1.default.urlencoded({ limit: "500mb", extended: true }));
 // app.use('/uploads', express.static('uploads'));
 const allowedOrigins = ['https://beware-seven.vercel.app/', ''];
 // Configure CORS
