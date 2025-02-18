@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateCard = exports.deleteCard = exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = void 0;
+exports.updateCard = exports.deleteCard = exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = exports.recordMessage = exports.deleteAdminMessages = exports.displayMessage = void 0;
 const ibex_model_1 = require("./ibex.model");
+const message_model_1 = require("./message.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const cloudinary_1 = require("cloudinary");
 // Configure Cloudinary
@@ -297,36 +298,57 @@ exports.sendMail = sendMail;
 const updateCard = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
+        console.log('id', id);
         const updatedData = {
             description: req.body.description,
             ibexrate: req.body.ibexrate,
-            guideName: req.body.guideName,
-            ibexsize: req.body.ibexsize,
             priceOld: req.body.priceOld,
             newPrice: req.body.newPrice,
-            huntername: req.body.huntername,
-            hunterlocation: req.body.hunterlocation,
-            latitude: req.body.latitude,
-            longitude: req.body.longitude,
             huntdate: req.body.huntdate,
-            huntType: req.body.huntType,
-            ibexname: req.body.ibexname,
         };
-        // Handle new photos if provided
-        if (req.files && Array.isArray(req.files)) {
-            const uploadedPhotos = yield Promise.all(req.files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
-                const result = yield cloudinary_1.v2.uploader.upload(file.path);
-                return {
-                    cloudinary_url: result.secure_url,
-                    cloudinary_id: result.public_id,
-                };
-            })));
-            updatedData.ibexphotos = uploadedPhotos; // Now TypeScript recognizes this property
-        }
-        const updatedIbex = yield ibex_model_1.Ibex.findByIdAndUpdate(id, updatedData, { new: true });
-        if (!updatedIbex) {
+        console.log('updated', updatedData);
+        // Retrieve the existing Ibex document from the database.
+        const existingIbex = yield ibex_model_1.Ibex.findById(id);
+        if (!existingIbex) {
             return res.status(404).json({ message: "Ibex not found" });
         }
+        console.log('existing', existingIbex);
+        // Check if there are new photos provided in the request.
+        if (req.files &&
+            req.files.ibexphotos &&
+            Array.isArray(req.files.ibexphotos) &&
+            req.files.ibexphotos.length > 0) {
+            //   // Access the first file from the "ibexphotos" field.
+            const file = req.files.ibexphotos[0];
+            console.log('New file path:', file.path);
+            // Retrieve the current public_id from the existing document (if available).
+            let oldPublicId;
+            if (existingIbex.ibexphotos &&
+                existingIbex.ibexphotos.length > 0 &&
+                existingIbex.ibexphotos[0].cloudinary_id) {
+                oldPublicId = existingIbex.ibexphotos[0].cloudinary_id;
+            }
+            // Upload the new file to Cloudinary with overwrite enabled.
+            const result = yield cloudinary_1.v2.uploader.upload(file.path, {
+                public_id: oldPublicId,
+                overwrite: true,
+            });
+            console.log('Cloudinary upload result:', result);
+            //   // Update the ibexphotos field with the new data.
+            updatedData.ibexphotos = [
+                {
+                    cloudinary_url: result.secure_url,
+                    cloudinary_id: result.public_id,
+                },
+            ];
+        }
+        // console.log('updateddata', updatedData);
+        // Update the document in the database.
+        const updatedIbex = yield ibex_model_1.Ibex.findByIdAndUpdate(id, updatedData, { new: true });
+        if (!updatedIbex) {
+            return res.status(404).json({ message: "Ibex not found after update" });
+        }
+        console.log('updatedibex', updatedIbex);
         res.status(200).json({ message: "Ibex card updated successfully", updatedIbex });
     }
     catch (error) {
@@ -349,3 +371,46 @@ const deleteallcloud = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.deleteallcloud = deleteallcloud;
+const recordMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { message } = req.body;
+        const newMessage = new message_model_1.IbexMessage({ message: message });
+        yield newMessage.save();
+        res.status(201).json({ success: true, message: 'Message saved successfully' });
+    }
+    catch (error) {
+        console.error('Error saving message:', error);
+        res.status(500).json({ success: false, message: 'Failed to save message' });
+    }
+});
+exports.recordMessage = recordMessage;
+const displayMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const latestMessage = yield message_model_1.IbexMessage.find().sort({ createdAt: -1 }); // Get the most recent message
+        if (!latestMessage) {
+            return res.json({ message: "" }); // If no message exists, return an empty message
+        }
+        console.log('latest', latestMessage);
+        res.json({ message: latestMessage }); // Send the latest message
+    }
+    catch (error) {
+        console.error("Error fetching message:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+exports.displayMessage = displayMessage;
+const deleteAdminMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const messageId = req.params.id;
+        const deletedMessage = yield message_model_1.IbexMessage.findByIdAndDelete(messageId);
+        if (!deletedMessage) {
+            return res.status(404).json({ success: false, message: "Message not found" });
+        }
+        res.json({ success: true, message: "Message deleted successfully" });
+    }
+    catch (error) {
+        console.error("Error deleting message:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
+exports.deleteAdminMessages = deleteAdminMessages;

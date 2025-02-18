@@ -8,7 +8,10 @@ import {
   sendMail,
   getAllIbex,
   deleteCard,
-  updateCard
+  updateCard,
+  recordMessage,
+  displayMessage,
+  deleteAdminMessages
 
 } from './ibexs.controller';
 import {upload} from '../utility/cloudnary.utils'
@@ -26,5 +29,9 @@ router.get('/cloud',getallcloudimages)
 router.delete('/deleteall/:publicId',deleteallcloud)
 // GET route for fetching all Ibex entries
 router.get('/', getAllIbex); 
+router.post('/savemessage',recordMessage)
+router.get('/displaythemessage',displayMessage)
+router.delete('/deleteadminmessage/:id',deleteAdminMessages)
+// router.get('/getallmesagecard')
 
 export { router as IbexRoute };

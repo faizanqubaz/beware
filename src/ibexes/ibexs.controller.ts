@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Ibex } from './ibex.model';
+import {IbexMessage} from './message.model'
 import path from 'path';
 import multer, { FileFilterCallback } from 'multer';
 import {CloudinaryStorage} from 'multer-storage-cloudinary'
@@ -431,4 +432,48 @@ const deleteallcloud = async(req:any,res:any) => {
     res.status(500).json({ error: error });
   }
 }
-export { saveIbex,getAllIbex,getallcloudimages,deleteallcloud,saveTopOfferIbex,saveNewHuntIbex,sendMail,deleteCard,updateCard };
+
+
+const recordMessage = async(req:any,res:any) => {
+  try {
+    const { message } = req.body;
+    const newMessage = new IbexMessage({ message: message });
+    await newMessage.save();
+    res.status(201).json({ success: true, message: 'Message saved successfully' });
+} catch (error) {
+    console.error('Error saving message:', error);
+    res.status(500).json({ success: false, message: 'Failed to save message' });
+}
+}
+
+
+const displayMessage = async(req:any,res:any) => {
+  try {
+    const latestMessage = await IbexMessage.find().sort({ createdAt: -1 }); // Get the most recent message
+    if (!latestMessage) {
+      return res.json({ message: "" }); // If no message exists, return an empty message
+    }
+    console.log('latest',latestMessage)
+    res.json({ message: latestMessage }); // Send the latest message
+  } catch (error) {
+    console.error("Error fetching message:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+const deleteAdminMessages = async(req:any,res:any) => {
+  try{
+  const messageId = req.params.id;
+    const deletedMessage = await IbexMessage.findByIdAndDelete(messageId);
+
+    if (!deletedMessage) {
+      return res.status(404).json({ success: false, message: "Message not found" });
+    }
+
+    res.json({ success: true, message: "Message deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
+export {displayMessage,deleteAdminMessages, recordMessage,saveIbex,getAllIbex,getallcloudimages,deleteallcloud,saveTopOfferIbex,saveNewHuntIbex,sendMail,deleteCard,updateCard };
