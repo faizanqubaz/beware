@@ -214,11 +214,13 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
         ibexsize,
         newPrice,
         huntername,
-        huntdate,  // This is a string like "16/01/2025"
+        huntdate, // This is a string like "16/01/2025"
         priceOld,
         hunterlocation,
-        ibexphotos,
-        guidephotos
+        ibexphotos, // Cloudinary URLs from frontend
+        ibexpublicid, // Cloudinary public IDs from frontend
+        guidepublicid, // Cloudinary public IDs for guides
+        guidephotos, // Cloudinary URLs for guides
       } = req.body;
 
      // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
@@ -229,21 +231,38 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
        return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
      }
 
+     const formattedIbexPhotos =
+     Array.isArray(ibexphotos) && Array.isArray(ibexpublicid)
+       ? ibexphotos.map((url, index) => ({
+           cloudinary_url: url,
+           cloudinary_id: ibexpublicid[index] || null,
+         }))
+       : [];
+
+   // Ensure guidephotos and guidepublicid are arrays before mapping
+   const formattedGuidePhotos =
+     Array.isArray(guidephotos) && Array.isArray(guidepublicid)
+       ? guidephotos.map((url, index) => ({
+           cloudinary_url: url,
+           cloudinary_id: guidepublicid[index] || null,
+         }))
+       : [];
+
       const ibex = new Ibex({
         ibexname,
-        description,
-        ibexrate,
-        guideName,
-        latitude,
-        longitude, // Save latitude and longitude instead of location
-        ibexsize,
-        newPrice,
-        huntername,
-        huntdate:formattedHuntDate,
-        ibexphotos: ibexphotos,
-        guidephotos: guidephotos,
-        priceOld,
-        hunterlocation,
+      description,
+      ibexrate,
+      guideName,
+      latitude,
+      longitude,
+      ibexsize,
+      newPrice,
+      huntername,
+      huntdate: formattedHuntDate, // Use the properly formatted date
+      ibexphotos: formattedIbexPhotos, // Correct format for MongoDB
+      guidephotos: formattedGuidePhotos, // Correct format for MongoDB
+      priceOld,
+      hunterlocation,
         huntType: "topoffertype"
       });
 
@@ -267,11 +286,13 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
         ibexsize,
         newPrice,
         huntername,
-        huntdate,  // This is a string like "16/01/2025"
+        huntdate, // This is a string like "16/01/2025"
         priceOld,
         hunterlocation,
-        ibexphotos,
-        guidephotos,
+        ibexphotos, // Cloudinary URLs from frontend
+        ibexpublicid, // Cloudinary public IDs from frontend
+        guidepublicid, // Cloudinary public IDs for guides
+        guidephotos, // Cloudinary URLs for guides
       } = req.body;
   // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
   const [day, month, year] = huntdate.split('/'); // Split the string
@@ -280,6 +301,22 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
   if (isNaN(formattedHuntDate.getTime())) {
     return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
   }
+  const formattedIbexPhotos =
+  Array.isArray(ibexphotos) && Array.isArray(ibexpublicid)
+    ? ibexphotos.map((url, index) => ({
+        cloudinary_url: url,
+        cloudinary_id: ibexpublicid[index] || null,
+      }))
+    : [];
+
+// Ensure guidephotos and guidepublicid are arrays before mapping
+const formattedGuidePhotos =
+  Array.isArray(guidephotos) && Array.isArray(guidepublicid)
+    ? guidephotos.map((url, index) => ({
+        cloudinary_url: url,
+        cloudinary_id: guidepublicid[index] || null,
+      }))
+    : [];
 
 
       const ibex = new Ibex({
@@ -288,13 +325,13 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
         ibexrate,
         guideName,
         latitude,
-        longitude, // Save latitude and longitude instead of location
+        longitude,
         ibexsize,
         newPrice,
         huntername,
-        huntdate:formattedHuntDate,
-        ibexphotos: ibexphotos,
-        guidephotos: guidephotos,
+        huntdate: formattedHuntDate, // Use the properly formatted date
+        ibexphotos: formattedIbexPhotos, // Correct format for MongoDB
+        guidephotos: formattedGuidePhotos, // Correct format for MongoDB
         priceOld,
         hunterlocation,
         huntType: "newhunttype"
