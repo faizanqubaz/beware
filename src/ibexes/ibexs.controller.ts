@@ -117,22 +117,6 @@ const deleteCard = async (req: Request, res: Response) => {
 // Save new Ibex to the database
 const saveIbex = async (req: Request, res: Response) => {
   try {
-    const ibexphotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["ibexphotos"] || [];
-    const guidephotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["guidephotos"] || [];
-
-    // Extract Cloudinary URLs and Public IDs
-    const ibexphotosData = ibexphotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
-
-    const guidephotosData = guidephotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
-
-    console.log("Guide Photo IDs:", guidephotosData);
-
     const {
       ibexname,
       description,
@@ -146,6 +130,8 @@ const saveIbex = async (req: Request, res: Response) => {
       huntdate,  // This is a string like "16/01/2025"
       priceOld,
       hunterlocation,
+      ibexphotos,
+      guidephotos
     } = req.body;
 
     // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
@@ -168,21 +154,22 @@ const saveIbex = async (req: Request, res: Response) => {
       newPrice,
       huntername,
       huntdate: formattedHuntDate, // Use the properly formatted date
-      ibexphotos: ibexphotosData, // Array with cloudinary_url & cloudinary_id
-      guidephotos: guidephotosData, // Array with cloudinary_url & cloudinary_id
+      ibexphotos: ibexphotos, // Array with cloudinary_url & cloudinary_id
+      guidephotos: guidephotos, // Array with cloudinary_url & cloudinary_id
       priceOld,
       hunterlocation,
       huntType: "populartype",
     });
 
     const savedIbex = await ibex.save();
-
+console.log('saved',savedIbex)
     return res.status(201).json({
       message: "Popular hunt created successfully!",
       ibex: savedIbex,
     });
 
   } catch (error: any) {
+    console.log('error',error)
     res.status(500).json({ message: "Error processing files", error: error.message });
   }
 };
@@ -192,21 +179,24 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
  
 
     try {
-      const ibextopofferphotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["ibexphotos"] || [];
-    const guidetopofferphotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["guidephotos"] || [];
 
-    // Extract Cloudinary URLs and Public IDs
-    const ibexphotosData = ibextopofferphotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
 
-    const guidephotosData = guidetopofferphotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
-
-      const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+      const {
+        ibexname,
+        description,
+        ibexrate,
+        guideName,
+        latitude,
+        longitude,
+        ibexsize,
+        newPrice,
+        huntername,
+        huntdate,  // This is a string like "16/01/2025"
+        priceOld,
+        hunterlocation,
+        ibexphotos,
+        guidephotos
+      } = req.body;
 
      // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
      const [day, month, year] = huntdate.split('/'); // Split the string
@@ -227,8 +217,8 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
         newPrice,
         huntername,
         huntdate:formattedHuntDate,
-        ibexphotos: ibexphotosData,
-        guidephotos: guidephotosData,
+        ibexphotos: ibexphotos,
+        guidephotos: guidephotos,
         priceOld,
         hunterlocation,
         huntType: "topoffertype"
@@ -244,21 +234,22 @@ const saveTopOfferIbex = async (req: Request, res: Response) => {
 
 const saveNewHuntIbex = async (req: Request, res: Response) => {
     try {
-      const ibexNewHuntphotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["ibexphotos"] || [];
-      const guideNewHuntphotos = (req.files as { [fieldname: string]: Express.Multer.File[] })["guidephotos"] || [];
-console.log('ibexphotos',ibexNewHuntphotos)
-     // Extract Cloudinary URLs and Public IDs
-     const ibexphotosData = ibexNewHuntphotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
-
-    const guidephotosData = guideNewHuntphotos.map((file) => ({
-      cloudinary_url: (file as any).path, // Cloudinary URL
-      cloudinary_id: (file as any).filename, // Cloudinary Public ID
-    }));
-
-      const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+      const {
+        ibexname,
+        description,
+        ibexrate,
+        guideName,
+        latitude,
+        longitude,
+        ibexsize,
+        newPrice,
+        huntername,
+        huntdate,  // This is a string like "16/01/2025"
+        priceOld,
+        hunterlocation,
+        ibexphotos,
+        guidephotos
+      } = req.body;
   // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
   const [day, month, year] = huntdate.split('/'); // Split the string
   const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
@@ -279,8 +270,8 @@ console.log('ibexphotos',ibexNewHuntphotos)
         newPrice,
         huntername,
         huntdate:formattedHuntDate,
-        ibexphotos: ibexphotosData,
-        guidephotos: guidephotosData,
+        ibexphotos: ibexphotos,
+        guidephotos: guidephotos,
         priceOld,
         hunterlocation,
         huntType: "newhunttype"

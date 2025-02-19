@@ -112,6 +112,7 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const ibexphotos = req.files["ibexphotos"] || [];
         const guidephotos = req.files["guidephotos"] || [];
+        console.log('ibex p', ibexphotos);
         // Extract Cloudinary URLs and Public IDs
         const ibexphotosData = ibexphotos.map((file) => ({
             cloudinary_url: file.path, // Cloudinary URL
@@ -124,6 +125,7 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Guide Photo IDs:", guidephotosData);
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
         priceOld, hunterlocation, } = req.body;
+        console.log('req', req.body);
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
