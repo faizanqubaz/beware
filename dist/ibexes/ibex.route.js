@@ -6,13 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.IbexRoute = void 0;
 const express_1 = __importDefault(require("express"));
 const ibexs_controller_1 = require("./ibexs.controller");
+const multer_1 = __importDefault(require("multer"));
 const cloudnary_utils_1 = require("../utility/cloudnary.utils");
+const uploads = (0, multer_1.default)();
 const router = express_1.default.Router();
 exports.IbexRoute = router;
 // POST route for saving Ibex data with image upload
-router.post('/popular', ibexs_controller_1.saveIbex);
-router.post('/newhunt', ibexs_controller_1.saveNewHuntIbex);
-router.post('/topoffer', ibexs_controller_1.saveTopOfferIbex);
+router.post('/popular', cloudnary_utils_1.upload.none(), ibexs_controller_1.saveIbex);
+router.post('/newhunt', cloudnary_utils_1.upload.none(), ibexs_controller_1.saveNewHuntIbex);
+router.post('/topoffer', cloudnary_utils_1.upload.none(), ibexs_controller_1.saveTopOfferIbex);
 router.post('/contactus', ibexs_controller_1.sendMail);
 router.delete('/deletecard/:id', ibexs_controller_1.deleteCard);
 router.put('/updatecard/:id', cloudnary_utils_1.upload.fields([{ name: "ibexphotos", maxCount: 5 }]), ibexs_controller_1.updateCard);

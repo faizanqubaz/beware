@@ -111,13 +111,33 @@ exports.deleteCard = deleteCard;
 const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
-        priceOld, hunterlocation, ibexphotos, guidephotos } = req.body;
+        priceOld, hunterlocation, ibexphotos, // Cloudinary URLs from frontend
+        ibexpublicid, // Cloudinary public IDs from frontend
+        guidepublicid, // Cloudinary public IDs for guides
+        guidephotos, // Cloudinary URLs for guides
+         } = req.body;
+        console.log("Request Body:", req.body);
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
-        const [day, month, year] = huntdate.split('/'); // Split the string
-        const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
+        const [day, month, year] = huntdate.split("/");
+        const formattedHuntDate = new Date(`${year}-${month}-${day}`);
         if (isNaN(formattedHuntDate.getTime())) {
             return res.status(400).json({ message: "Invalid huntdate format. Use DD/MM/YYYY." });
         }
+        // Ensure ibexphotos and ibexpublicid are arrays before mapping
+        const formattedIbexPhotos = Array.isArray(ibexphotos) && Array.isArray(ibexpublicid)
+            ? ibexphotos.map((url, index) => ({
+                cloudinary_url: url,
+                cloudinary_id: ibexpublicid[index] || null,
+            }))
+            : [];
+        // Ensure guidephotos and guidepublicid are arrays before mapping
+        const formattedGuidePhotos = Array.isArray(guidephotos) && Array.isArray(guidepublicid)
+            ? guidephotos.map((url, index) => ({
+                cloudinary_url: url,
+                cloudinary_id: guidepublicid[index] || null,
+            }))
+            : [];
+        console.log('formateddd', formattedGuidePhotos);
         // Save to MongoDB
         const ibex = new ibex_model_1.Ibex({
             ibexname,
@@ -130,22 +150,22 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             newPrice,
             huntername,
             huntdate: formattedHuntDate, // Use the properly formatted date
-            ibexphotos: ibexphotos, // Array with cloudinary_url & cloudinary_id
-            guidephotos: guidephotos, // Array with cloudinary_url & cloudinary_id
+            ibexphotos: formattedIbexPhotos, // Correct format for MongoDB
+            guidephotos: formattedGuidePhotos, // Correct format for MongoDB
             priceOld,
             hunterlocation,
             huntType: "populartype",
         });
         const savedIbex = yield ibex.save();
-        console.log('saved', savedIbex);
+        console.log("Saved Ibex:", savedIbex);
         return res.status(201).json({
             message: "Popular hunt created successfully!",
             ibex: savedIbex,
         });
     }
     catch (error) {
-        console.log('error', error);
-        res.status(500).json({ message: "Error processing files", error: error.message });
+        console.log("Error:", error);
+        res.status(500).json({ message: "Error processing request", error: error.message });
     }
 });
 exports.saveIbex = saveIbex;
@@ -187,7 +207,7 @@ exports.saveTopOfferIbex = saveTopOfferIbex;
 const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
-        priceOld, hunterlocation, ibexphotos, guidephotos } = req.body;
+        priceOld, hunterlocation, ibexphotos, guidephotos, } = req.body;
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
