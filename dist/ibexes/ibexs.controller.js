@@ -110,22 +110,8 @@ exports.deleteCard = deleteCard;
 // Save new Ibex to the database
 const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const ibexphotos = req.files["ibexphotos"] || [];
-        const guidephotos = req.files["guidephotos"] || [];
-        console.log('ibex p', ibexphotos);
-        // Extract Cloudinary URLs and Public IDs
-        const ibexphotosData = ibexphotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        const guidephotosData = guidephotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        console.log("Guide Photo IDs:", guidephotosData);
         const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
-        priceOld, hunterlocation, } = req.body;
-        console.log('req', req.body);
+        priceOld, hunterlocation, ibexphotos, guidephotos } = req.body;
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
@@ -144,37 +130,29 @@ const saveIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             newPrice,
             huntername,
             huntdate: formattedHuntDate, // Use the properly formatted date
-            ibexphotos: ibexphotosData, // Array with cloudinary_url & cloudinary_id
-            guidephotos: guidephotosData, // Array with cloudinary_url & cloudinary_id
+            ibexphotos: ibexphotos, // Array with cloudinary_url & cloudinary_id
+            guidephotos: guidephotos, // Array with cloudinary_url & cloudinary_id
             priceOld,
             hunterlocation,
             huntType: "populartype",
         });
         const savedIbex = yield ibex.save();
+        console.log('saved', savedIbex);
         return res.status(201).json({
             message: "Popular hunt created successfully!",
             ibex: savedIbex,
         });
     }
     catch (error) {
+        console.log('error', error);
         res.status(500).json({ message: "Error processing files", error: error.message });
     }
 });
 exports.saveIbex = saveIbex;
 const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const ibextopofferphotos = req.files["ibexphotos"] || [];
-        const guidetopofferphotos = req.files["guidephotos"] || [];
-        // Extract Cloudinary URLs and Public IDs
-        const ibexphotosData = ibextopofferphotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        const guidephotosData = guidetopofferphotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
+        priceOld, hunterlocation, ibexphotos, guidephotos } = req.body;
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
@@ -192,8 +170,8 @@ const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, functio
             newPrice,
             huntername,
             huntdate: formattedHuntDate,
-            ibexphotos: ibexphotosData,
-            guidephotos: guidephotosData,
+            ibexphotos: ibexphotos,
+            guidephotos: guidephotos,
             priceOld,
             hunterlocation,
             huntType: "topoffertype"
@@ -208,19 +186,8 @@ const saveTopOfferIbex = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.saveTopOfferIbex = saveTopOfferIbex;
 const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const ibexNewHuntphotos = req.files["ibexphotos"] || [];
-        const guideNewHuntphotos = req.files["guidephotos"] || [];
-        console.log('ibexphotos', ibexNewHuntphotos);
-        // Extract Cloudinary URLs and Public IDs
-        const ibexphotosData = ibexNewHuntphotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        const guidephotosData = guideNewHuntphotos.map((file) => ({
-            cloudinary_url: file.path, // Cloudinary URL
-            cloudinary_id: file.filename, // Cloudinary Public ID
-        }));
-        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, priceOld, hunterlocation } = req.body;
+        const { ibexname, description, ibexrate, guideName, latitude, longitude, ibexsize, newPrice, huntername, huntdate, // This is a string like "16/01/2025"
+        priceOld, hunterlocation, ibexphotos, guidephotos } = req.body;
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
@@ -238,8 +205,8 @@ const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function
             newPrice,
             huntername,
             huntdate: formattedHuntDate,
-            ibexphotos: ibexphotosData,
-            guidephotos: guidephotosData,
+            ibexphotos: ibexphotos,
+            guidephotos: guidephotos,
             priceOld,
             hunterlocation,
             huntType: "newhunttype"

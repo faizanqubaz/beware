@@ -248,7 +248,7 @@ const saveNewHuntIbex = async (req: Request, res: Response) => {
         priceOld,
         hunterlocation,
         ibexphotos,
-        guidephotos
+        guidephotos,
       } = req.body;
   // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
   const [day, month, year] = huntdate.split('/'); // Split the string
