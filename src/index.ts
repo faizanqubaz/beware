@@ -35,7 +35,7 @@ const allowedOrigins = ['https://beware-seven.vercel.app/', ''];
 
 // Configure CORS
 const corsOptions = {
-  origin: ['https://beware-seven.vercel.app/','http://localhost:3000'], // Replace with your actual Vercel URL
+  origin: ['https://beware-seven.vercel.app/','http://localhost:3000','https://beware-frontend-d7uq.vercel.app/'], // Replace with your actual Vercel URL
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   optionsSuccessStatus: 204

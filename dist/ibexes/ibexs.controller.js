@@ -229,6 +229,7 @@ const saveNewHuntIbex = (req, res) => __awaiter(void 0, void 0, void 0, function
         guidepublicid, // Cloudinary public IDs for guides
         guidephotos, // Cloudinary URLs for guides
          } = req.body;
+        console.log('reqbody', req.body);
         // Convert huntdate from "DD/MM/YYYY" to a JavaScript Date object
         const [day, month, year] = huntdate.split('/'); // Split the string
         const formattedHuntDate = new Date(`${year}-${month}-${day}`); // Convert to "YYYY-MM-DD"
