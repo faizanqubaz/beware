@@ -44,6 +44,7 @@ const corsOptions = {
 
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // If using cookies or JWT tokens, add this middleware:
 app.use((req, res, next) => {

@@ -39,12 +39,21 @@ app.use(express_1.default.urlencoded({ limit: "500mb", extended: true }));
 const allowedOrigins = ['https://beware-seven.vercel.app/', ''];
 // Configure CORS
 const corsOptions = {
-    origin: ['https://beware-seven.vercel.app/', 'http://localhost:3000'], // Replace with your actual Vercel URL
+    origin: ['https://beware-seven.vercel.app', 'http://localhost:3000', 'https://beware-frontend-d7uq.vercel.app'], // Replace with your actual Vercel URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     optionsSuccessStatus: 204
 };
 app.use((0, cors_1.default)(corsOptions));
+app.options('*', (0, cors_1.default)(corsOptions));
+// If using cookies or JWT tokens, add this middleware:
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://beware-frontend-d7uq.vercel.app");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    next();
+});
 app.use('/api/v2', routes_1.mainRouter);
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI ||
