@@ -19,4 +19,11 @@ interface IIbex extends Document {
   guidephotos: string[], // Array of guide photo URLs
 }
 
-export { IIbex };
+type SessionData = {
+  [session: string]: {
+    popular: { hunts: number; revenue: number; cancellations: number };
+    newhunt: { hunts: number; revenue: number; cancellations: number };
+  };
+};
+
+export { IIbex ,SessionData};

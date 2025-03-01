@@ -25,3 +25,4 @@ router.get('/', ibexs_controller_1.getAllIbex);
 router.post('/savemessage', ibexs_controller_1.recordMessage);
 router.get('/displaythemessage', ibexs_controller_1.displayMessage);
 router.delete('/deleteadminmessage/:id', ibexs_controller_1.deleteAdminMessages);
+router.get('/stats', ibexs_controller_1.statsofhunt);

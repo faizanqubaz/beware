@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.displayProjects = exports.createProject = void 0;
+exports.deleteProject = exports.displayProjects = exports.createProject = void 0;
 const project_model_1 = require("./project.model");
+const cloudinary_1 = require("cloudinary");
 const createProject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let { projectphotos, ibexpublicid } = req.body;
@@ -51,3 +52,37 @@ const displayProjects = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.displayProjects = displayProjects;
+const deleteProject = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { publicId } = req.params;
+        const project = yield project_model_1.Project.findById(publicId);
+        console.log('project', project);
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+        const cloudinaryId = (_a = project.projectphotos[0]) === null || _a === void 0 ? void 0 : _a.cloudinary_id;
+        console.log('cloudid', cloudinaryId);
+        if (!cloudinaryId) {
+            return res.status(404).json({ message: "Cloudinary ID not found in project photos" });
+        }
+        // Call Cloudinary to delete the image
+        const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error("Request Timeout")), ms));
+        // Race between Cloudinary request and timeout
+        const result = yield Promise.race([
+            cloudinary_1.v2.uploader.destroy(cloudinaryId),
+            timeout(60000), // 60 seconds timeout
+        ]);
+        console.log("Cloudinary Response:", result);
+        if (result.result === "not found") {
+            return res.status(404).json({ message: "Image not found." });
+        }
+        yield project_model_1.Project.findByIdAndDelete(publicId);
+        res.status(200).json({ message: "Project deleted successfully." });
+    }
+    catch (error) {
+        console.log('errrr', error);
+        res.status(500).json({ error: error });
+    }
+});
+exports.deleteProject = deleteProject;

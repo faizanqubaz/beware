@@ -11,3 +11,4 @@ const router = express_1.default.Router();
 exports.projectRoute = router;
 router.post('/create', cloudnary_utils_1.upload.none(), project_controller_1.createProject);
 router.get('/getall', project_controller_1.displayProjects);
+router.delete('/deleteprojects/:publicId', project_controller_1.deleteProject);

@@ -10,6 +10,7 @@ import fs from 'fs'; // For file system operations
 import { AnyNsRecord } from 'dns';
 import {upload} from '../utility/cloudnary.utils'
 import {UpdateData} from '../utility/Iibexdata'
+import { SessionData } from './ibex.interface';
 
 // Configure Cloudinary
 // cloudinary.config({
@@ -529,4 +530,18 @@ const deleteAdminMessages = async(req:any,res:any) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
-export {displayMessage,deleteAdminMessages, recordMessage,saveIbex,getAllIbex,getallcloudimages,deleteallcloud,saveTopOfferIbex,saveNewHuntIbex,sendMail,deleteCard,updateCard };
+
+const statsofhunt = async(req:any,res:any)=> {
+  try {
+
+      // Fetch all Ibex documents with type 'popular' or 'newhunt'
+      console.log('running')
+      const ibexData = await Ibex.find({ huntType: { $in: ['populartype', 'newhunttype'] } })
+      const sessionData:SessionData = {};
+  
+
+  } catch (error) {
+    
+  }
+}
+export {statsofhunt,displayMessage,deleteAdminMessages, recordMessage,saveIbex,getAllIbex,getallcloudimages,deleteallcloud,saveTopOfferIbex,saveNewHuntIbex,sendMail,deleteCard,updateCard };

@@ -11,7 +11,8 @@ import {
   updateCard,
   recordMessage,
   displayMessage,
-  deleteAdminMessages
+  deleteAdminMessages,
+  statsofhunt
 
 } from './ibexs.controller';
 import multer from "multer";
@@ -33,6 +34,7 @@ router.get('/', getAllIbex);
 router.post('/savemessage',recordMessage)
 router.get('/displaythemessage',displayMessage)
 router.delete('/deleteadminmessage/:id',deleteAdminMessages)
+router.get('/stats',statsofhunt)
 // router.get('/getallmesagecard')
 
 export { router as IbexRoute };

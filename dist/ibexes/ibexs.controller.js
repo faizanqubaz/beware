@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateCard = exports.deleteCard = exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = exports.recordMessage = exports.deleteAdminMessages = exports.displayMessage = void 0;
+exports.updateCard = exports.deleteCard = exports.sendMail = exports.saveNewHuntIbex = exports.saveTopOfferIbex = exports.deleteallcloud = exports.getallcloudimages = exports.getAllIbex = exports.saveIbex = exports.recordMessage = exports.deleteAdminMessages = exports.displayMessage = exports.statsofhunt = void 0;
 const ibex_model_1 = require("./ibex.model");
 const message_model_1 = require("./message.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
@@ -438,3 +438,13 @@ const deleteAdminMessages = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.deleteAdminMessages = deleteAdminMessages;
+const statsofhunt = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Fetch all Ibex documents with type 'popular' or 'newhunt'
+        const ibexData = yield ibex_model_1.Ibex.find({ type: { $in: ['popular', 'newhunt'] } });
+        console.log('ibexdata', ibexData);
+    }
+    catch (error) {
+    }
+});
+exports.statsofhunt = statsofhunt;
