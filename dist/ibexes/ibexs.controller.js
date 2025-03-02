@@ -17,12 +17,6 @@ const ibex_model_1 = require("./ibex.model");
 const message_model_1 = require("./message.model");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const cloudinary_1 = require("cloudinary");
-// Configure Cloudinary
-// cloudinary.config({
-//   cloud_name: 'dyds5ol3y',
-//   api_key: '214534318241163',
-//   api_secret: 'qxGY3QFqcJN1KYeTo8k21_rapsw'
-// });
 // const storage = multer.memoryStorage(); // Store images in memory before uploading to Cloudinary
 // const uploads = multer({ storage });
 const getallcloudimages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -440,12 +434,61 @@ const deleteAdminMessages = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.deleteAdminMessages = deleteAdminMessages;
 const statsofhunt = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Fetch all Ibex documents with type 'popular' or 'newhunt'
-        console.log('running');
         const ibexData = yield ibex_model_1.Ibex.find({ huntType: { $in: ['populartype', 'newhunttype'] } });
-        const sessionData = {};
+        function isWithinSession(date, startMonth, endMonth, startYear) {
+            const sessionStart = new Date(`${startYear}-${startMonth}-01`);
+            const sessionEnd = new Date(`${startYear + 1}-${endMonth}-30`);
+            return date >= sessionStart && date <= sessionEnd;
+        }
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentSessionStartYear = currentMonth >= 11 ? currentYear : currentYear - 1;
+        const previousSessionStartYear = currentSessionStartYear - 1;
+        const currentSessionHunts = ibexData.filter((ibex) => {
+            if (!ibex.huntdate)
+                return false;
+            const huntDate = new Date(ibex.huntdate);
+            return isWithinSession(huntDate, 11, 4, currentSessionStartYear);
+        });
+        const previousSessionHunts = ibexData.filter((ibex) => {
+            if (!ibex.huntdate)
+                return false;
+            const huntDate = new Date(ibex.huntdate);
+            return isWithinSession(huntDate, 11, 4, previousSessionStartYear);
+        });
+        const totalHuntsCurrentSession = currentSessionHunts.length;
+        const totalHuntsPreviousSession = previousSessionHunts.length;
+        const totalRevenueCurrentSession = currentSessionHunts.reduce((sum, ibex) => sum + (ibex.newPrice ? parseFloat(ibex.newPrice) : 0), 0);
+        const totalRevenuePreviousSession = previousSessionHunts.reduce((sum, ibex) => sum + (ibex.newPrice ? parseFloat(ibex.newPrice) : 0), 0);
+        const huntPercentageChange = totalHuntsPreviousSession ? ((totalHuntsCurrentSession - totalHuntsPreviousSession) / totalHuntsPreviousSession) * 100 : (totalHuntsCurrentSession > 0 ? 100 : 0);
+        const revenuePercentageChange = totalRevenuePreviousSession ? ((totalRevenueCurrentSession - totalRevenuePreviousSession) / totalRevenuePreviousSession) * 100 : (totalRevenueCurrentSession > 0 ? 100 : 0);
+        const groupedHuntsByYear = ibexData.reduce((acc, ibex) => {
+            if (!ibex.huntdate)
+                return acc;
+            const year = new Date(ibex.huntdate).getFullYear();
+            if (!acc[year]) {
+                acc[year] = { hunts: 0, revenue: 0 };
+            }
+            acc[year].hunts += 1;
+            acc[year].revenue += ibex.newPrice ? parseFloat(ibex.newPrice) : 0;
+            return acc;
+        }, {});
+        const huntData = Object.keys(groupedHuntsByYear).map((year) => ({
+            session: year,
+            hunts: groupedHuntsByYear[year].hunts,
+            revenue: groupedHuntsByYear[year].revenue,
+        }));
+        res.status(200).json({
+            huntData,
+            totalHunt: totalHuntsCurrentSession,
+            totalRevenue: totalRevenueCurrentSession,
+            huntPercentageChange: huntPercentageChange.toFixed(2),
+            revenuePercentageChange: revenuePercentageChange.toFixed(2),
+        });
     }
     catch (error) {
+        console.log('error', error);
     }
 });
 exports.statsofhunt = statsofhunt;
