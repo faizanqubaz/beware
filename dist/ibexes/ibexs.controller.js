@@ -441,8 +441,9 @@ exports.deleteAdminMessages = deleteAdminMessages;
 const statsofhunt = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Fetch all Ibex documents with type 'popular' or 'newhunt'
-        const ibexData = yield ibex_model_1.Ibex.find({ type: { $in: ['popular', 'newhunt'] } });
-        console.log('ibexdata', ibexData);
+        console.log('running');
+        const ibexData = yield ibex_model_1.Ibex.find({ huntType: { $in: ['populartype', 'newhunttype'] } });
+        const sessionData = {};
     }
     catch (error) {
     }
