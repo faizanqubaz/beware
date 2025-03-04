@@ -48,7 +48,7 @@ app.use((0, cors_1.default)(corsOptions));
 app.options('*', (0, cors_1.default)(corsOptions));
 // If using cookies or JWT tokens, add this middleware:
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://beware-seven.vercel.app");
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
