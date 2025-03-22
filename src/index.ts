@@ -48,7 +48,7 @@ app.options('*', cors(corsOptions));
 
 // If using cookies or JWT tokens, add this middleware:
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://beware-frontend-d7uq.vercel.app");
+  res.header("Access-Control-Allow-Origin", "http:/localhost:3000");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
@@ -58,9 +58,10 @@ app.use('/api/v2', mainRouter);
 
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://faizanquba1:wk63Jpi7c16ISRyE@search-apserverdb.mj8x8op.mongodb.net/?retryWrites=true&w=majority&appName=search-apserverDB';
-
+  process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error('MONGODB_URI must be defined');
+  }
 // Dynamic BASE_URL based on NODE_ENV
 const BASE_URL =
   process.env.NODE_ENV === 'production'
